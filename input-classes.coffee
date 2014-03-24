@@ -13,6 +13,7 @@ do ( root = do ->
   class Base
     constructor : ( el ) ->
       this.el = el
+      this.listeners = []
       return this
 
     value : ->
@@ -25,7 +26,7 @@ do ( root = do ->
       return this.value( arguments )
 
     validate : ->
-      return true
+      return this.el.checkValidity()
 
     isFocused : ->
       return document.activeElement is this.el
@@ -36,11 +37,15 @@ do ( root = do ->
     _setValue : ( value ) ->
       return ( this.el.value = value )
 
-    # returns the bound function so you can store it and use it to remove the listener later.
+    _checkable : ->
+      return "checked" of this.el
+
     addEventListener : ( type, listener, useCapture = false ) ->
       listener = listener.bind( this )
       this.el.addEventListener( type, listener, useCapture )
-      return listener
+      this.listeners.push
+        type: type
+        listener: listener
 
     removeEventListener : ( type, listener, useCapture = false ) ->
       this.el.removeEventListener( type, listener, useCapture )
@@ -58,17 +63,29 @@ do ( root = do ->
     constructor : ( el ) ->
       super( el )
 
-    checked : -> 
+    check : -> 
+      return this._switch( true )
+
+    uncheck : ->
+      return this._switch( false )
+
+    _switch : ( bool ) ->
+      if typeof bool is "undefined" or this.isChecked() isnt bool
+        this.el.checked = !this.el.checked
+        this._dispatchChange()
+      return this.isChecked()
+
+    _dispatchChange : ->
+      this.el.dispatchEvent new Event "change"
+
+    isChecked : ->
       return this.el.checked
 
     value : ->
       if arguments.length
         this._setValue( arguments )
       else
-        return if this.checked() then super() else return false
-
-    toggle : ->
-      this.checked = !this.checked
+        return if this.isChecked() then super() else return false
 
   class SelectComponent extends Base
     constructor : ( el ) ->
@@ -94,11 +111,7 @@ do ( root = do ->
       return this
 
     value : ->
-      results = []
-      for input in this.inputs  
-        val = input.value()
-        if val
-          results.push( val )
+      results = ( val for input in this.inputs when val = input.value() )
       return if results.length then results else false
 
     values : ->
@@ -116,8 +129,32 @@ do ( root = do ->
       return this.hashValues( arguments )
 
     addEventListener : ( type, listener, useCapture = false ) ->
+      input.addEventListener( type, listener.bind( this ), useCapture ) for input in this.inputs
+    
+    inputById : ( id ) ->
+      if id.charAt( 0 ) is "#"
+        id = id.slice( 1 )
       for input in this.inputs
-        input.el.addEventListener( type, listener.bind( this ), useCapture )
+        return input if input.id is id
+      return false
+
+    check : ( param ) ->
+      return this._changeCheck( true, param )
+
+    uncheck : ( param ) ->
+      return this._changeCheck( false, param )
+
+    _changeCheck : ( onOff, param ) ->
+      if typeof param is "undefined"
+        for input in this.inputs when input instanceof CheckableComponent
+          input[if onOff then "check" else "uncheck"]()
+      else if typeof param is "number" and this.inputs[param] and this.inputs[param]._switch
+        this.inputs[param][if onOff then "check" else "uncheck"]()
+      else if typeof param is "string"
+        if ( input = this.inputById( param ) )
+          if input instanceof CheckableComponent
+            input[if onOff then "check" else "f"]
+
 
   InputFactory = ( el ) ->
     classMatcher =

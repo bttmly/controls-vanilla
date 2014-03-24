@@ -19,6 +19,7 @@
     Base = (function() {
       function Base(el) {
         this.el = el;
+        this.listeners = [];
         return this;
       }
 
@@ -39,7 +40,7 @@
       };
 
       Base.prototype.validate = function() {
-        return true;
+        return this.el.checkValidity();
       };
 
       Base.prototype.isFocused = function() {
@@ -54,13 +55,20 @@
         return (this.el.value = value);
       };
 
+      Base.prototype._checkable = function() {
+        return "checked" in this.el;
+      };
+
       Base.prototype.addEventListener = function(type, listener, useCapture) {
         if (useCapture == null) {
           useCapture = false;
         }
         listener = listener.bind(this);
         this.el.addEventListener(type, listener, useCapture);
-        return listener;
+        return this.listeners.push({
+          type: type,
+          listener: listener
+        });
       };
 
       Base.prototype.removeEventListener = function(type, listener, useCapture) {
@@ -95,7 +103,27 @@
         CheckableComponent.__super__.constructor.call(this, el);
       }
 
-      CheckableComponent.prototype.checked = function() {
+      CheckableComponent.prototype.check = function() {
+        return this._switch(true);
+      };
+
+      CheckableComponent.prototype.uncheck = function() {
+        return this._switch(false);
+      };
+
+      CheckableComponent.prototype._switch = function(bool) {
+        if (typeof bool === "undefined" || this.isChecked() !== bool) {
+          this.el.checked = !this.el.checked;
+          this._dispatchChange();
+        }
+        return this.isChecked();
+      };
+
+      CheckableComponent.prototype._dispatchChange = function() {
+        return this.el.dispatchEvent(new Event("change"));
+      };
+
+      CheckableComponent.prototype.isChecked = function() {
         return this.el.checked;
       };
 
@@ -103,16 +131,12 @@
         if (arguments.length) {
           return this._setValue(arguments);
         } else {
-          if (this.checked()) {
+          if (this.isChecked()) {
             return CheckableComponent.__super__.value.call(this);
           } else {
             return false;
           }
         }
-      };
-
-      CheckableComponent.prototype.toggle = function() {
-        return this.checked = !this.checked;
       };
 
       return CheckableComponent;
@@ -167,16 +191,19 @@
       }
 
       InputGroup.prototype.value = function() {
-        var input, results, val, _i, _len, _ref;
-        results = [];
-        _ref = this.inputs;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          input = _ref[_i];
-          val = input.value();
-          if (val) {
-            results.push(val);
+        var input, results, val;
+        results = (function() {
+          var _i, _len, _ref, _results;
+          _ref = this.inputs;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            input = _ref[_i];
+            if (val = input.value()) {
+              _results.push(val);
+            }
           }
-        }
+          return _results;
+        }).call(this);
         if (results.length) {
           return results;
         } else {
@@ -219,9 +246,55 @@
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           input = _ref[_i];
-          _results.push(input.el.addEventListener(type, listener.bind(this), useCapture));
+          _results.push(input.addEventListener(type, listener.bind(this), useCapture));
         }
         return _results;
+      };
+
+      InputGroup.prototype.inputById = function(id) {
+        var input, _i, _len, _ref;
+        if (id.charAt(0) === "#") {
+          id = id.slice(1);
+        }
+        _ref = this.inputs;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          input = _ref[_i];
+          if (input.id === id) {
+            return input;
+          }
+        }
+        return false;
+      };
+
+      InputGroup.prototype.check = function(param) {
+        return this._changeCheck(true, param);
+      };
+
+      InputGroup.prototype.uncheck = function(param) {
+        return this._changeCheck(false, param);
+      };
+
+      InputGroup.prototype._changeCheck = function(onOff, param) {
+        var input, _i, _len, _ref, _results;
+        if (typeof param === "undefined") {
+          _ref = this.inputs;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            input = _ref[_i];
+            if (input instanceof CheckableComponent) {
+              _results.push(input[onOff ? "check" : "uncheck"]());
+            }
+          }
+          return _results;
+        } else if (typeof param === "number" && this.inputs[param] && this.inputs[param]._switch) {
+          return this.inputs[param][onOff ? "check" : "uncheck"]();
+        } else if (typeof param === "string") {
+          if ((input = this.inputById(param))) {
+            if (input instanceof CheckableComponent) {
+              return input[onOff ? "check" : "f"];
+            }
+          }
+        }
       };
 
       return InputGroup;

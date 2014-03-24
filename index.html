@@ -101,16 +101,16 @@
 
 
     .wrapper {
-      width: 75%;
       margin: 0 auto;
-      display: flex;
       max-height: 100%;
+      position: relative;
     }
 
     .wrapper > div {
-      padding: 1rem;
-      flex: 1;
-      max-height: 100%;
+      width: -webkit-calc(50% - 2rem);
+      width: calc(50% - 1rem);
+      padding-left: 1rem;
+      padding-right: 1rem;
     }
 
     .input-pane input[type="text"] {
@@ -144,13 +144,19 @@
       font-family: "Inconsolata", "Monaco", monospace;
     }
 
+    .console-pane {
+      position: fixed;
+      top: 2rem;
+      width: 50%;
+      right: 1rem;
+      height: 100%;
+    }
+
     #console-output {
       color: springgreen;
       background: #333;
-/*      max-height: 50vh;
-      height: 50vh;*/
-      height: 80vh;
-      max-height: 80vh;
+      height: -webkit-calc(100% - 4rem);
+      height: calc(100% - 4rem);
       overflow-y: scroll;
     }
 
@@ -239,9 +245,10 @@
   <script>
     (function(){
 
-      InputMaker = window.InputMaker
+      var InputFactory = InputClasses.InputFactory
 
-      window.Log = {}
+
+      Log = {}
       Log.el = document.querySelectorAll( "#console-output" )[0]
       Log.erase = function() { 
         this.el.innerHTML = "";
@@ -253,25 +260,22 @@
         this.el.scrollTop = this.el.scrollHeight
         return this; 
       }
-      Log.cleanup = function() {
-
-      }
 
 
-      var input1 = new InputMaker( "#input1" )
-      var checkboxes = new InputGroup( "[name='checkbox']" );
+      var input1 = InputFactory( "#input1" )
+      var checkboxes = InputFactory( "[name='checkbox']" );
       var checkButton = document.querySelector( "#checkbox-group-button" )
-      var radios = new InputGroup( "[name='radio']" );
+      var radios = InputFactory( "[name='radio']" );
       var radioButton = document.querySelector( "#radio-group-button" )
 
-      var singleSelect = new InputMaker( "#single-select" );
+      var singleSelect = InputFactory( "#single-select" );
       var singleSelectButton = document.querySelector( "#single-select-button" )
 
-      var multiSelect = new InputMaker( "#multi-select" );
+      var multiSelect = InputFactory( "#multi-select" );
       var multiSelectButton = document.querySelector( "#multi-select-button" )
 
       input1.addEventListener("change", function( event ) {
-        Log.print( this.value );
+        Log.print( this.el.value );
       });
 
       checkButton.addEventListener("click", function( event ) {

@@ -99,19 +99,18 @@ do ( root = do ->
       Array.prototype.filter.call options, ( option ) ->
         return option.selected and not option.disabled
 
-  class InputGroup
+  class InputCollection extends Array
     constructor : ( selector ) ->
       if selector instanceof NodeList
         nodeList = selector
       else
         nodeList = document.querySelectorAll( selector )
-      this.inputs = []
       for node, i in nodeList
-        this.inputs.push InputFactory nodeList.item( i )
+        this.push InputFactory nodeList.item( i )
       return this
 
     value : ->
-      results = ( val for input in this.inputs when val = input.value() )
+      results = ( val for input in this when val = input.value() )
       return if results.length then results else false
 
     values : ->
@@ -119,7 +118,7 @@ do ( root = do ->
 
     hashValue : ->
       results = {}
-      for input in this.inputs  
+      for input in this  
         val = input.value()
         if val
           results[camelize(input.el.id)] = val
@@ -129,12 +128,12 @@ do ( root = do ->
       return this.hashValues( arguments )
 
     addEventListener : ( type, listener, useCapture = false ) ->
-      input.addEventListener( type, listener.bind( this ), useCapture ) for input in this.inputs
+      input.addEventListener( type, listener.bind( this ), useCapture ) for input in this
     
     inputById : ( id ) ->
       if id.charAt( 0 ) is "#"
         id = id.slice( 1 )
-      for input in this.inputs
+      for input in this
         return input if input.id is id
       return false
 
@@ -146,10 +145,10 @@ do ( root = do ->
 
     _changeCheck : ( onOff, param ) ->
       if typeof param is "undefined"
-        for input in this.inputs when input instanceof CheckableComponent
+        for input in this when input instanceof CheckableComponent
           input[if onOff then "check" else "uncheck"]()
-      else if typeof param is "number" and this.inputs[param] and this.inputs[param]._switch
-        this.inputs[param][if onOff then "check" else "uncheck"]()
+      else if typeof param is "number" and this[param] and this[param]._switch
+        this[param][if onOff then "check" else "uncheck"]()
       else if typeof param is "string"
         if ( input = this.inputById( param ) )
           if input instanceof CheckableComponent
@@ -167,7 +166,7 @@ do ( root = do ->
       el = document.querySelectorAll( el )
 
     if el.length > 1
-      return new InputGroup( el )
+      return new InputCollection( el )
     else 
       if el.item
         el = el.item( 0 )

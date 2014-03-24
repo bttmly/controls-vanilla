@@ -4,7 +4,7 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   (function(root) {
-    var Base, CheckableComponent, InputComponent, InputFactory, InputGroup, SelectComponent, camelize;
+    var Base, CheckableComponent, InputCollection, InputComponent, InputFactory, SelectComponent, camelize;
     camelize = function(str) {
       var camel;
       camel = str.replace(/(?:^|[-_ ])(\w)/g, function(_, c) {
@@ -174,30 +174,30 @@
       return SelectComponent;
 
     })(Base);
-    InputGroup = (function() {
-      function InputGroup(selector) {
+    InputCollection = (function(_super) {
+      __extends(InputCollection, _super);
+
+      function InputCollection(selector) {
         var i, node, nodeList, _i, _len;
         if (selector instanceof NodeList) {
           nodeList = selector;
         } else {
           nodeList = document.querySelectorAll(selector);
         }
-        this.inputs = [];
         for (i = _i = 0, _len = nodeList.length; _i < _len; i = ++_i) {
           node = nodeList[i];
-          this.inputs.push(InputFactory(nodeList.item(i)));
+          this.push(InputFactory(nodeList.item(i)));
         }
         return this;
       }
 
-      InputGroup.prototype.value = function() {
+      InputCollection.prototype.value = function() {
         var input, results, val;
         results = (function() {
-          var _i, _len, _ref, _results;
-          _ref = this.inputs;
+          var _i, _len, _results;
           _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            input = _ref[_i];
+          for (_i = 0, _len = this.length; _i < _len; _i++) {
+            input = this[_i];
             if (val = input.value()) {
               _results.push(val);
             }
@@ -211,16 +211,15 @@
         }
       };
 
-      InputGroup.prototype.values = function() {
+      InputCollection.prototype.values = function() {
         return this.value(arguments);
       };
 
-      InputGroup.prototype.hashValue = function() {
-        var input, results, val, _i, _len, _ref;
+      InputCollection.prototype.hashValue = function() {
+        var input, results, val, _i, _len;
         results = {};
-        _ref = this.inputs;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          input = _ref[_i];
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          input = this[_i];
           val = input.value();
           if (val) {
             results[camelize(input.el.id)] = val;
@@ -233,32 +232,30 @@
         }
       };
 
-      InputGroup.prototype.hashValues = function() {
+      InputCollection.prototype.hashValues = function() {
         return this.hashValues(arguments);
       };
 
-      InputGroup.prototype.addEventListener = function(type, listener, useCapture) {
-        var input, _i, _len, _ref, _results;
+      InputCollection.prototype.addEventListener = function(type, listener, useCapture) {
+        var input, _i, _len, _results;
         if (useCapture == null) {
           useCapture = false;
         }
-        _ref = this.inputs;
         _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          input = _ref[_i];
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          input = this[_i];
           _results.push(input.addEventListener(type, listener.bind(this), useCapture));
         }
         return _results;
       };
 
-      InputGroup.prototype.inputById = function(id) {
-        var input, _i, _len, _ref;
+      InputCollection.prototype.inputById = function(id) {
+        var input, _i, _len;
         if (id.charAt(0) === "#") {
           id = id.slice(1);
         }
-        _ref = this.inputs;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          input = _ref[_i];
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          input = this[_i];
           if (input.id === id) {
             return input;
           }
@@ -266,28 +263,27 @@
         return false;
       };
 
-      InputGroup.prototype.check = function(param) {
+      InputCollection.prototype.check = function(param) {
         return this._changeCheck(true, param);
       };
 
-      InputGroup.prototype.uncheck = function(param) {
+      InputCollection.prototype.uncheck = function(param) {
         return this._changeCheck(false, param);
       };
 
-      InputGroup.prototype._changeCheck = function(onOff, param) {
-        var input, _i, _len, _ref, _results;
+      InputCollection.prototype._changeCheck = function(onOff, param) {
+        var input, _i, _len, _results;
         if (typeof param === "undefined") {
-          _ref = this.inputs;
           _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            input = _ref[_i];
+          for (_i = 0, _len = this.length; _i < _len; _i++) {
+            input = this[_i];
             if (input instanceof CheckableComponent) {
               _results.push(input[onOff ? "check" : "uncheck"]());
             }
           }
           return _results;
-        } else if (typeof param === "number" && this.inputs[param] && this.inputs[param]._switch) {
-          return this.inputs[param][onOff ? "check" : "uncheck"]();
+        } else if (typeof param === "number" && this[param] && this[param]._switch) {
+          return this[param][onOff ? "check" : "uncheck"]();
         } else if (typeof param === "string") {
           if ((input = this.inputById(param))) {
             if (input instanceof CheckableComponent) {
@@ -297,9 +293,9 @@
         }
       };
 
-      return InputGroup;
+      return InputCollection;
 
-    })();
+    })(Array);
     InputFactory = function(el) {
       var classMatcher, constructor;
       classMatcher = {
@@ -313,7 +309,7 @@
         el = document.querySelectorAll(el);
       }
       if (el.length > 1) {
-        return new InputGroup(el);
+        return new InputCollection(el);
       } else {
         if (el.item) {
           el = el.item(0);

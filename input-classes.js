@@ -177,7 +177,11 @@
             results.push(val);
           }
         }
-        return results;
+        if (results.length) {
+          return results;
+        } else {
+          return false;
+        }
       };
 
       InputGroup.prototype.values = function() {
@@ -195,7 +199,11 @@
             results[camelize(input.el.id)] = val;
           }
         }
-        return results;
+        if (Object.keys(results).length) {
+          return results;
+        } else {
+          return false;
+        }
       };
 
       InputGroup.prototype.hashValues = function() {

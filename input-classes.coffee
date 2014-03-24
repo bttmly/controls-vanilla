@@ -99,7 +99,7 @@ do ( root = do ->
         val = input.value()
         if val
           results.push( val )
-      return results
+      return if results.length then results else false
 
     values : ->
       return this.value( arguments )
@@ -110,7 +110,7 @@ do ( root = do ->
         val = input.value()
         if val
           results[camelize(input.el.id)] = val
-      return results
+      return if Object.keys(results).length then results else false
 
     hashValues : ->
       return this.hashValues( arguments )

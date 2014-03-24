@@ -1,0 +1,299 @@
+<html>
+<head>
+  <title>JS Classes for HTML Inputs</title>
+</head>
+  <style>
+
+    *,
+    *:before,
+    *:after {
+      box-sizing: border-box;
+    }
+
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      max-height: 100vh;
+    }
+
+    body {
+      font-family: "Avenir Next", "Avenir", "Helvetica Neue", "Helvetica", sans-serif;
+      color: #333;
+      padding: 2em;
+    }
+
+    h1, h2, h3, h4, h5, h6, p {
+      margin: 0 0 1em 0;
+    }
+
+    input,
+    select,
+    button {
+      font-family: inherit;
+      font-weight: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+
+    input[type="text"],
+    input[type="radio"],
+    input[type="checkbox"],
+    input[type="button"],
+    button,
+    select {
+      -webkit-appearance: none;
+      border: 1px solid slategray;
+      box-shadow: 0 0 0 .5rem transparent;
+      -webkit-transition: box-shadow .25s ease-in-out;
+      transition: box-shadow .25s ease-in-out;
+    }
+    input[type="text"]:focus,
+    input[type="radio"]:focus,
+    input[type="checkbox"]:focus,
+    input[type="button"]:focus,
+    button:focus,
+    select:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px slategray;
+    }
+
+    input[type="text"],
+    button,
+    select {
+      padding: .25em .5em;
+    }
+
+    select[multiple] {
+      padding: .5em;
+    }
+
+    select {
+      position: relative;
+      border-radius: 0;
+      width: 100%;
+    }
+
+
+    input[type="radio"],
+    input[type="checkbox"] {
+      width: 1em;
+      height: 1em;
+      vertical-align: bottom;
+    }
+
+    input[type="radio"]:checked,
+    input[type="checkbox"]:checked {
+      background: lightslategray;
+    }
+
+    input[type="radio"] {
+      border-radius: 1em;
+    }
+
+    button {
+      background: transparent;
+    }
+
+
+
+
+
+
+    .wrapper {
+      width: 75%;
+      margin: 0 auto;
+      display: flex;
+      max-height: 100%;
+    }
+
+    .wrapper > div {
+      padding: 1rem;
+      flex: 1;
+      max-height: 100%;
+    }
+
+    .input-pane input[type="text"] {
+      display: block;
+      width: 100%;
+      margin: 0 0 .5em 0;
+    }
+
+    .control-wrapper {
+      margin: 2rem 0;
+    }
+
+    input, label, button {
+      cursor: pointer;
+    }
+
+    button {
+      margin: 1rem 0;
+    }
+
+    input[type='text'] {
+      cursor: text;
+    }
+
+    .input-pane label:after {
+      content: "";
+      display: block;
+    }
+
+    pre {
+      font-family: "Inconsolata", "Monaco", monospace;
+    }
+
+    #console-output {
+      color: springgreen;
+      background: #333;
+/*      max-height: 50vh;
+      height: 50vh;*/
+      height: 80vh;
+      max-height: 80vh;
+      overflow-y: scroll;
+    }
+
+    #console-output pre {
+      margin: 1em;
+    }
+
+
+
+
+  </style>
+<body>
+  <div class="wrapper">
+    <div class="input-pane">
+
+      <input type="text" id="input1">
+
+      <input type="text" id="input2">
+
+      <input type="text" id="input3">
+
+      <input type="text" id="input4">
+
+      <div class="control-wrapper">
+        <label>
+          <input type="checkbox" id="checkbox1" name="checkbox" value="bourbon">
+          Bourbon
+        </label>
+        <label>
+          <input type="checkbox" id="checkbox1" name="checkbox" value="rye">
+          Rye
+        </label>        
+        <label>
+          <input type="checkbox" id="checkbox1" name="checkbox" value="scotch">
+          Scotch
+        </label>        
+        <button id="checkbox-group-button">Print Checked Values</button>
+      </div>
+
+
+      <div class="control-wrapper">
+        <label>
+          <input type="radio" id="checkbox1" name="radio" value="neat">
+          Neat
+        </label>        
+        <label>
+          <input type="radio" id="checkbox1" name="radio" value="rocks">
+          On the rocks
+        </label> 
+        <label>
+          <input type="radio" id="checkbox1" name="radio" value="water">
+          With water
+        </label>     
+        <button id="radio-group-button">Print Checked Value</button>
+      </div>
+
+      <div class="control-wrapper">
+        <select id="single-select">
+          <option selected disabled>Pick one...</option>
+          <option value="10-year">10 year</option>
+          <option value="12-year">12 year</option>
+          <option value="15-year">15 year</option>
+        </select>
+        <button id="single-select-button">Print Selected Option</button>
+      </div>
+
+      <div class="control-wrapper">
+        <select multiple id="multi-select">
+          <option disabled>Pick some...</option>
+          <option value="first">One Thing</option>
+          <option value="second">Another thing</option>
+          <option value="third">Third thing</option>
+        </select>
+        <button id="multi-select-button">Print Selected Options</button>
+      </div>
+
+    </div>
+
+    <div class="console-pane">
+      <div id="console-output"></div>
+    </div>
+
+  </div>
+
+  <script src="input-classes.js"></script>
+  <script>
+    (function(){
+
+      InputMaker = window.InputMaker
+
+      window.Log = {}
+      Log.el = document.querySelectorAll( "#console-output" )[0]
+      Log.erase = function() { 
+        this.el.innerHTML = "";
+        return this;
+      }
+      Log.print = function( string ) { 
+        string = "<pre>" + string + "</pre>"
+        this.el.innerHTML += string;
+        this.el.scrollTop = this.el.scrollHeight
+        return this; 
+      }
+      Log.cleanup = function() {
+
+      }
+
+
+      var input1 = new InputMaker( "#input1" )
+      var checkboxes = new InputGroup( "[name='checkbox']" );
+      var checkButton = document.querySelector( "#checkbox-group-button" )
+      var radios = new InputGroup( "[name='radio']" );
+      var radioButton = document.querySelector( "#radio-group-button" )
+
+      var singleSelect = new InputMaker( "#single-select" );
+      var singleSelectButton = document.querySelector( "#single-select-button" )
+
+      var multiSelect = new InputMaker( "#multi-select" );
+      var multiSelectButton = document.querySelector( "#multi-select-button" )
+
+      input1.addEventListener("change", function( event ) {
+        Log.print( this.value );
+      });
+
+      checkButton.addEventListener("click", function( event ) {
+        Log.print( checkboxes.values() );
+      });
+
+      radioButton.addEventListener("click", function( event ) {
+        Log.print( radios.values() );
+      });
+
+      singleSelectButton.addEventListener("click", function( event ) {
+        Log.print( singleSelect.values() )
+      });
+
+      multiSelectButton.addEventListener("click", function( event ) {
+        Log.print( multiSelect.values() )
+      });
+
+    }).call( this )
+
+
+  </script>
+
+</body>
+</html>

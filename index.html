@@ -4,11 +4,11 @@
 </head>
   <style>
 
-    *,
-    *:before,
-    *:after {
-      box-sizing: border-box;
-    }
+*, *:before, *:after {
+   -moz-box-sizing:    border-box;   /* Firefox 1, probably can drop this */
+   -webkit-box-sizing: border-box;   /* Safari 3-4, also probably droppable */
+    box-sizing:        border-box;   /* Everything else */
+}
 
     body,
     html {
@@ -21,6 +21,7 @@
       font-family: "Avenir Next", "Avenir", "Helvetica Neue", "Helvetica", sans-serif;
       color: #333;
       padding: 2em;
+      background: whitesmoke;
     }
 
     h1, h2, h3, h4, h5, h6, p {
@@ -108,19 +109,35 @@
 
     .wrapper > div {
       width: -webkit-calc(50% - 2rem);
-      width: calc(50% - 1rem);
-      padding-left: 1rem;
-      padding-right: 1rem;
+      width: calc(50% - 2rem);
+    }
+
+    .wrapper > div:first-of-type {
+
+    }
+
+    .wrapper > div:last-of-type {
+
     }
 
     .input-pane input[type="text"] {
       display: block;
       width: 100%;
-      margin: 0 0 .5em 0;
+    }
+
+    .input-pane input[type="text"] + input[type="text"] {
+      margin-top: 1rem;
     }
 
     .control-wrapper {
-      margin: 2rem 0;
+      margin: 0 0 2rem 0;
+      padding: .5rem;
+      background: white;
+      border: 1px solid #ddd;
+    }
+
+    .control-wrapper p {
+      margin: 0 0 .5rem 0;
     }
 
     input, label, button {
@@ -148,7 +165,7 @@
       position: fixed;
       top: 2rem;
       width: 50%;
-      right: 1rem;
+      right: 2rem;
       height: 100%;
     }
 
@@ -172,15 +189,13 @@
   <div class="wrapper">
     <div class="input-pane">
 
-      <input type="text" id="input1">
-
-      <input type="text" id="input2">
-
-      <input type="text" id="input3">
-
-      <input type="text" id="input4">
+      <div class="control-wrapper">
+        <p>Single text input.</p>
+        <input type="text" id="input1">
+      </div>
 
       <div class="control-wrapper">
+        <p>Checkbox group.</p>
         <label>
           <input type="checkbox" id="checkbox1" name="checkbox" value="bourbon">
           Bourbon
@@ -193,44 +208,50 @@
           <input type="checkbox" id="checkbox1" name="checkbox" value="scotch">
           Scotch
         </label>        
-        <button id="checkbox-group-button">Print Checked Values</button>
       </div>
 
 
       <div class="control-wrapper">
+        <p>Radio group.</p>
         <label>
-          <input type="radio" id="checkbox1" name="radio" value="neat">
+          <input type="radio" id="radio1" name="radio" value="neat">
           Neat
         </label>        
         <label>
-          <input type="radio" id="checkbox1" name="radio" value="rocks">
+          <input type="radio" id="radio1" name="radio" value="rocks">
           On the rocks
         </label> 
         <label>
-          <input type="radio" id="checkbox1" name="radio" value="water">
+          <input type="radio" id="radio1" name="radio" value="water">
           With water
         </label>     
-        <button id="radio-group-button">Print Checked Value</button>
       </div>
 
       <div class="control-wrapper">
+        <p>Single select.</p>
         <select id="single-select">
           <option selected disabled>Pick one...</option>
           <option value="10-year">10 year</option>
           <option value="12-year">12 year</option>
           <option value="15-year">15 year</option>
         </select>
-        <button id="single-select-button">Print Selected Option</button>
       </div>
 
       <div class="control-wrapper">
+        <p>Multiple select.</p>
         <select multiple id="multi-select">
           <option disabled>Pick some...</option>
           <option value="first">One Thing</option>
           <option value="second">Another thing</option>
           <option value="third">Third thing</option>
         </select>
-        <button id="multi-select-button">Print Selected Options</button>
+      </div>
+
+      <div class="control-wrapper hash-test">
+        <p>Text input group w/ values as hash.</p>
+        <input id="email-input" type="text" placeholder="Email address">
+        <input id="first-name-input" type="text" placeholder="First name">
+        <input id="last-name-input" type="text" placeholder="Last name">
       </div>
 
     </div>
@@ -247,6 +268,9 @@
 
       var InputFactory = InputClasses.InputFactory
 
+      var bracketize = function( str ) {
+        return "[" + str + "]"
+      }
 
       Log = {}
       Log.el = document.querySelectorAll( "#console-output" )[0]
@@ -264,34 +288,34 @@
 
       var input1 = InputFactory( "#input1" )
       var checkboxes = InputFactory( "[name='checkbox']" );
-      var checkButton = document.querySelector( "#checkbox-group-button" )
       var radios = InputFactory( "[name='radio']" );
-      var radioButton = document.querySelector( "#radio-group-button" )
-
       var singleSelect = InputFactory( "#single-select" );
-      var singleSelectButton = document.querySelector( "#single-select-button" )
-
       var multiSelect = InputFactory( "#multi-select" );
-      var multiSelectButton = document.querySelector( "#multi-select-button" )
+      var hashGroup = InputFactory( ".hash-test input" );
+
 
       input1.addEventListener("change", function( event ) {
-        Log.print( this.el.value );
+        Log.print( JSON.stringify( this.value()));
       });
 
-      checkButton.addEventListener("click", function( event ) {
-        Log.print( checkboxes.values() );
+      checkboxes.addEventListener("change", function( event ) {
+        Log.print( JSON.stringify( this.value()));
       });
 
-      radioButton.addEventListener("click", function( event ) {
-        Log.print( radios.values() );
+      radios.addEventListener("change", function( event ) {
+        Log.print( JSON.stringify( this.value()));
       });
 
-      singleSelectButton.addEventListener("click", function( event ) {
-        Log.print( singleSelect.values() )
+      singleSelect.addEventListener("change", function( event ) {
+        Log.print( JSON.stringify( this.value()));
       });
 
-      multiSelectButton.addEventListener("click", function( event ) {
-        Log.print( multiSelect.values() )
+      multiSelect.addEventListener("change", function( event ) {
+        Log.print( JSON.stringify( this.value()));
+      });
+
+      hashGroup.addEventListener("change", function( event ) {
+        Log.print( JSON.stringify( this.hashValue()));
       });
 
     }).call( this )

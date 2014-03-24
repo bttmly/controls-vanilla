@@ -4,7 +4,18 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   (function(root) {
-    var Base, CheckableComponent, InputComponent, InputFactory, InputGroup, SelectComponent;
+    var Base, CheckableComponent, InputComponent, InputFactory, InputGroup, SelectComponent, camelize;
+    camelize = function(str) {
+      var camel;
+      camel = str.replace(/(?:^|[-_ ])(\w)/g, function(_, c) {
+        if (c) {
+          return c.toUpperCase();
+        } else {
+          return "";
+        }
+      });
+      return camel.charAt(0).toLowerCase() + camel.slice(1);
+    };
     Base = (function() {
       function Base(el) {
         this.el = el;
@@ -171,6 +182,38 @@
 
       InputGroup.prototype.values = function() {
         return this.value(arguments);
+      };
+
+      InputGroup.prototype.hashValue = function() {
+        var input, results, val, _i, _len, _ref;
+        results = {};
+        _ref = this.inputs;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          input = _ref[_i];
+          val = input.value();
+          if (val) {
+            results[camelize(input.el.id)] = val;
+          }
+        }
+        return results;
+      };
+
+      InputGroup.prototype.hashValues = function() {
+        return this.hashValues(arguments);
+      };
+
+      InputGroup.prototype.addEventListener = function(type, listener, useCapture) {
+        var input, _i, _len, _ref, _results;
+        if (useCapture == null) {
+          useCapture = false;
+        }
+        _ref = this.inputs;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          input = _ref[_i];
+          _results.push(input.el.addEventListener(type, listener.bind(this), useCapture));
+        }
+        return _results;
       };
 
       return InputGroup;

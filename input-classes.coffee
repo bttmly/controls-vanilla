@@ -5,6 +5,11 @@ do ( root = do ->
     return window
 ) ->
 
+  camelize = (str) ->
+    camel = str.replace /(?:^|[-_ ])(\w)/g, (_, c) ->
+      return if c then c.toUpperCase() else ""
+    return camel.charAt(0).toLowerCase() + camel.slice(1)
+
   class Base
     constructor : ( el ) ->
       this.el = el
@@ -99,6 +104,20 @@ do ( root = do ->
     values : ->
       return this.value( arguments )
 
+    hashValue : ->
+      results = {}
+      for input in this.inputs  
+        val = input.value()
+        if val
+          results[camelize(input.el.id)] = val
+      return results
+
+    hashValues : ->
+      return this.hashValues( arguments )
+
+    addEventListener : ( type, listener, useCapture = false ) ->
+      for input in this.inputs
+        input.el.addEventListener( type, listener.bind( this ), useCapture )
 
   InputFactory = ( el ) ->
     classMatcher =

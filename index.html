@@ -179,14 +179,16 @@
       margin: 1em;
     }
 
-    #clear-console {
-      position: absolute;
+    #clear-console-button {
+      font-family: "Inconsolata", monospace;
+      position: fixed;
+      color: springgreen;
       border-color: springgreen;
-      bottom: 4em;
-      right: 1em;
+      top: 2em;
+      right: 3em;
       background: #333;
     }
-    #clear-console:focus {
+    #clear-console-button:focus {
       outline: 2px solid springgreen;
     }
   </style>
@@ -208,11 +210,11 @@
           Bourbon
         </label>
         <label>
-          <input type="checkbox" id="checkbox1" name="checkbox" value="rye">
+          <input type="checkbox" id="checkbox2" name="checkbox" value="rye">
           Rye
         </label>        
         <label>
-          <input type="checkbox" id="checkbox1" name="checkbox" value="scotch">
+          <input type="checkbox" id="checkbox3" name="checkbox" value="scotch">
           Scotch
         </label>        
       </div>
@@ -225,11 +227,11 @@
           Neat
         </label>        
         <label>
-          <input type="radio" id="radio1" name="radio" value="rocks">
+          <input type="radio" id="radio2" name="radio" value="rocks">
           On the rocks
         </label> 
         <label>
-          <input type="radio" id="radio1" name="radio" value="water">
+          <input type="radio" id="radio3" name="radio" value="water">
           With water
         </label>     
       </div>
@@ -268,32 +270,39 @@
       </div>
     </div>
 
+    <button id="clear-console-button">Clear</button>
+
   </div>
 
   <script src="input-classes.js"></script>
   <script>
     (function(){
 
-      var InputFactory = InputClasses.InputFactory
+      var InputFactory = InputClasses.InputFactory;
 
       var bracketize = function( str ) {
-        return "[" + str + "]"
+        return "[" + str + "]";
       }
 
-      Log = {}
+      var Log = {}
       Log.el = document.querySelector( "#console-output" )
       Log.erase = function() { 
         this.el.innerHTML = "";
         return this;
       }
       Log.print = function( string ) { 
-        string = "<pre>" + string + "</pre>"
+        string = "<pre>" + string + "</pre>";
         this.el.innerHTML += string;
-        this.el.scrollTop = this.el.scrollHeight
+        this.el.scrollTop = this.el.scrollHeight;
         return this; 
       }
 
-      window.testInputs = {}
+      var clearButton = document.querySelector( "#clear-console-button" );
+      clearButton.addEventListener( "click", function( event ) {
+        Log.erase();
+      });
+
+      window.testInputs = {};
 
       testInputs.input1 = InputFactory( "#input1" )
       testInputs.checkboxes = InputFactory( "[name='checkbox']" );

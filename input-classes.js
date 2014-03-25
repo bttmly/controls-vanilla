@@ -4,7 +4,7 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   (function(root) {
-    var Base, CheckableComponent, InputComponent, InputFactory, InputGroup, SelectComponent, camelize;
+    var Base, CheckableComponent, InputBuilder, InputCollection, InputComponent, InputFactory, SelectComponent, camelize;
     camelize = function(str) {
       var camel;
       camel = str.replace(/(?:^|[-_ ])(\w)/g, function(_, c) {
@@ -19,6 +19,7 @@
     Base = (function() {
       function Base(el) {
         this.el = el;
+        this.id = el.id;
         this.listeners = [];
         return this;
       }
@@ -28,7 +29,7 @@
           return this._setValue(arguments);
         } else {
           if (this._hasValue() && this.validate()) {
-            return this.el.value;
+            return this._getValue();
           } else {
             return false;
           }
@@ -52,7 +53,12 @@
       };
 
       Base.prototype._setValue = function(value) {
+        this.dispatchEvent(new Event("change"));
         return (this.el.value = value);
+      };
+
+      Base.prototype._getValue = function() {
+        return this.el.value;
       };
 
       Base.prototype._checkable = function() {
@@ -114,13 +120,9 @@
       CheckableComponent.prototype._switch = function(bool) {
         if (typeof bool === "undefined" || this.isChecked() !== bool) {
           this.el.checked = !this.el.checked;
-          this._dispatchChange();
+          this.dispatchEvent(new Event("change"));
         }
         return this.isChecked();
-      };
-
-      CheckableComponent.prototype._dispatchChange = function() {
-        return this.el.dispatchEvent(new Event("change"));
       };
 
       CheckableComponent.prototype.isChecked = function() {
@@ -174,30 +176,44 @@
       return SelectComponent;
 
     })(Base);
-    InputGroup = (function() {
-      function InputGroup(selector) {
+    InputCollection = (function(_super) {
+      __extends(InputCollection, _super);
+
+      function InputCollection(selector) {
         var i, node, nodeList, _i, _len;
         if (selector instanceof NodeList) {
           nodeList = selector;
         } else {
           nodeList = document.querySelectorAll(selector);
         }
-        this.inputs = [];
         for (i = _i = 0, _len = nodeList.length; _i < _len; i = ++_i) {
           node = nodeList[i];
-          this.inputs.push(InputFactory(nodeList.item(i)));
+          this.push(nodeList.item(i));
         }
         return this;
       }
 
-      InputGroup.prototype.value = function() {
+      InputCollection.prototype.push = function(el) {
+        if (!(el instanceof Node)) {
+          if (jQuery && el instanceof jQuery) {
+            el = el[0];
+          } else if (typeof el === "string") {
+            el = document.querySelector(el);
+          } else {
+            console.warn("Invalid param passed to InputCollection::push");
+            return false;
+          }
+        }
+        return InputCollection.__super__.push.call(this, InputFactory(el));
+      };
+
+      InputCollection.prototype.value = function() {
         var input, results, val;
         results = (function() {
-          var _i, _len, _ref, _results;
-          _ref = this.inputs;
+          var _i, _len, _results;
           _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            input = _ref[_i];
+          for (_i = 0, _len = this.length; _i < _len; _i++) {
+            input = this[_i];
             if (val = input.value()) {
               _results.push(val);
             }
@@ -211,19 +227,18 @@
         }
       };
 
-      InputGroup.prototype.values = function() {
+      InputCollection.prototype.values = function() {
         return this.value(arguments);
       };
 
-      InputGroup.prototype.hashValue = function() {
-        var input, results, val, _i, _len, _ref;
+      InputCollection.prototype.hashValue = function() {
+        var input, results, val, _i, _len;
         results = {};
-        _ref = this.inputs;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          input = _ref[_i];
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          input = this[_i];
           val = input.value();
           if (val) {
-            results[camelize(input.el.id)] = val;
+            results[camelize(input.id)] = val;
           }
         }
         if (Object.keys(results).length) {
@@ -233,32 +248,30 @@
         }
       };
 
-      InputGroup.prototype.hashValues = function() {
+      InputCollection.prototype.hashValues = function() {
         return this.hashValues(arguments);
       };
 
-      InputGroup.prototype.addEventListener = function(type, listener, useCapture) {
-        var input, _i, _len, _ref, _results;
+      InputCollection.prototype.addEventListener = function(type, listener, useCapture) {
+        var input, _i, _len, _results;
         if (useCapture == null) {
           useCapture = false;
         }
-        _ref = this.inputs;
         _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          input = _ref[_i];
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          input = this[_i];
           _results.push(input.addEventListener(type, listener.bind(this), useCapture));
         }
         return _results;
       };
 
-      InputGroup.prototype.inputById = function(id) {
-        var input, _i, _len, _ref;
+      InputCollection.prototype.inputById = function(id) {
+        var input, _i, _len;
         if (id.charAt(0) === "#") {
           id = id.slice(1);
         }
-        _ref = this.inputs;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          input = _ref[_i];
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          input = this[_i];
           if (input.id === id) {
             return input;
           }
@@ -266,28 +279,27 @@
         return false;
       };
 
-      InputGroup.prototype.check = function(param) {
+      InputCollection.prototype.check = function(param) {
         return this._changeCheck(true, param);
       };
 
-      InputGroup.prototype.uncheck = function(param) {
+      InputCollection.prototype.uncheck = function(param) {
         return this._changeCheck(false, param);
       };
 
-      InputGroup.prototype._changeCheck = function(onOff, param) {
-        var input, _i, _len, _ref, _results;
+      InputCollection.prototype._changeCheck = function(onOff, param) {
+        var input, _i, _len, _results;
         if (typeof param === "undefined") {
-          _ref = this.inputs;
           _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            input = _ref[_i];
+          for (_i = 0, _len = this.length; _i < _len; _i++) {
+            input = this[_i];
             if (input instanceof CheckableComponent) {
               _results.push(input[onOff ? "check" : "uncheck"]());
             }
           }
           return _results;
-        } else if (typeof param === "number" && this.inputs[param] && this.inputs[param]._switch) {
-          return this.inputs[param][onOff ? "check" : "uncheck"]();
+        } else if (typeof param === "number" && this[param] && this[param]._switch) {
+          return this[param][onOff ? "check" : "uncheck"]();
         } else if (typeof param === "string") {
           if ((input = this.inputById(param))) {
             if (input instanceof CheckableComponent) {
@@ -297,9 +309,9 @@
         }
       };
 
-      return InputGroup;
+      return InputCollection;
 
-    })();
+    })(Array);
     InputFactory = function(el) {
       var classMatcher, constructor;
       classMatcher = {
@@ -313,7 +325,7 @@
         el = document.querySelectorAll(el);
       }
       if (el.length > 1) {
-        return new InputGroup(el);
+        return new InputCollection(el);
       } else {
         if (el.item) {
           el = el.item(0);
@@ -331,12 +343,59 @@
         }
       }
     };
+    InputBuilder = function(opts) {
+      var collection, el, node, nodes, parent, _fn, _i, _j, _len, _len1, _ref;
+      parent = (function() {
+        if (opts.parent instanceof Node) {
+          return opts.parent;
+        } else if (jQuery && opts.parent instanceof jQuery) {
+          return opts.parent[0];
+        } else if (typeof opts.parent === "string") {
+          return document.querySelector(opts.parent);
+        }
+      })();
+      nodes = [];
+      collection = new InputCollection();
+      _ref = opts.els;
+      _fn = function() {
+        var attr, cl, e, _j, _k, _len1, _len2, _ref1, _ref2;
+        e = document.createElement(el.tagName);
+        e.id = el.id || "";
+        e.name = el.name || "";
+        e.textContent = el.textContent || "";
+        _ref1 = el.classList;
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          cl = _ref1[_j];
+          e.classList.add(cl);
+        }
+        if (el.attr) {
+          _ref2 = el.attr;
+          for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+            attr = _ref2[_k];
+            e.setAttribute(attr.name, attr.val);
+          }
+        }
+        nodes.push(e);
+        if (e.tagName === "INPUT") {
+          return collection.push(e);
+        }
+      };
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        el = _ref[_i];
+        _fn();
+      }
+      for (_j = 0, _len1 = nodes.length; _j < _len1; _j++) {
+        node = nodes[_j];
+        parent.appendChild(node);
+      }
+      return collection;
+    };
     return root.InputClasses = {
       Base: Base,
       InputComponent: InputComponent,
       SelectComponent: SelectComponent,
       CheckableComponent: CheckableComponent,
-      InputGroup: InputGroup,
+      InputCollection: InputCollection,
       InputFactory: InputFactory
     };
   })((function() {

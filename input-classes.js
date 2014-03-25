@@ -19,6 +19,7 @@
     Base = (function() {
       function Base(el) {
         this.el = el;
+        this.id = el.id;
         this.listeners = [];
         return this;
       }
@@ -222,7 +223,7 @@
           input = this[_i];
           val = input.value();
           if (val) {
-            results[camelize(input.el.id)] = val;
+            results[camelize(input.id)] = val;
           }
         }
         if (Object.keys(results).length) {
@@ -332,7 +333,7 @@
       InputComponent: InputComponent,
       SelectComponent: SelectComponent,
       CheckableComponent: CheckableComponent,
-      InputGroup: InputGroup,
+      InputCollection: InputCollection,
       InputFactory: InputFactory
     };
   })((function() {

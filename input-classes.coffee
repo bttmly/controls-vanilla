@@ -13,6 +13,7 @@ do ( root = do ->
   class Base
     constructor : ( el ) ->
       this.el = el
+      this.id = el.id
       this.listeners = []
       return this
 
@@ -121,7 +122,7 @@ do ( root = do ->
       for input in this  
         val = input.value()
         if val
-          results[camelize(input.el.id)] = val
+          results[camelize(input.id)] = val
       return if Object.keys(results).length then results else false
 
     hashValues : ->
@@ -181,11 +182,13 @@ do ( root = do ->
           console.warn( "Invalid element passed to InputFactory" ) 
           return false
 
+
+
   root.InputClasses =
     Base : Base
     InputComponent : InputComponent
     SelectComponent : SelectComponent
     CheckableComponent : CheckableComponent
-    InputGroup : InputGroup
+    InputCollection : InputCollection
     InputFactory : InputFactory
 

@@ -4,7 +4,7 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   (function(root) {
-    var Base, CheckableComponent, InputCollection, InputComponent, InputFactory, SelectComponent, camelize;
+    var Base, CheckableComponent, InputBuilder, InputCollection, InputComponent, InputFactory, SelectComponent, camelize;
     camelize = function(str) {
       var camel;
       camel = str.replace(/(?:^|[-_ ])(\w)/g, function(_, c) {
@@ -29,7 +29,7 @@
           return this._setValue(arguments);
         } else {
           if (this._hasValue() && this.validate()) {
-            return this.el.value;
+            return this._getValue();
           } else {
             return false;
           }
@@ -53,7 +53,12 @@
       };
 
       Base.prototype._setValue = function(value) {
+        this.dispatchEvent(new Event("change"));
         return (this.el.value = value);
+      };
+
+      Base.prototype._getValue = function() {
+        return this.el.value;
       };
 
       Base.prototype._checkable = function() {
@@ -115,13 +120,9 @@
       CheckableComponent.prototype._switch = function(bool) {
         if (typeof bool === "undefined" || this.isChecked() !== bool) {
           this.el.checked = !this.el.checked;
-          this._dispatchChange();
+          this.dispatchEvent(new Event("change"));
         }
         return this.isChecked();
-      };
-
-      CheckableComponent.prototype._dispatchChange = function() {
-        return this.el.dispatchEvent(new Event("change"));
       };
 
       CheckableComponent.prototype.isChecked = function() {
@@ -187,10 +188,24 @@
         }
         for (i = _i = 0, _len = nodeList.length; _i < _len; i = ++_i) {
           node = nodeList[i];
-          this.push(InputFactory(nodeList.item(i)));
+          this.push(nodeList.item(i));
         }
         return this;
       }
+
+      InputCollection.prototype.push = function(el) {
+        if (!(el instanceof Node)) {
+          if (jQuery && el instanceof jQuery) {
+            el = el[0];
+          } else if (typeof el === "string") {
+            el = document.querySelector(el);
+          } else {
+            console.warn("Invalid param passed to InputCollection::push");
+            return false;
+          }
+        }
+        return InputCollection.__super__.push.call(this, InputFactory(el));
+      };
 
       InputCollection.prototype.value = function() {
         var input, results, val;
@@ -327,6 +342,53 @@
             return false;
         }
       }
+    };
+    InputBuilder = function(opts) {
+      var collection, el, node, nodes, parent, _fn, _i, _j, _len, _len1, _ref;
+      parent = (function() {
+        if (opts.parent instanceof Node) {
+          return opts.parent;
+        } else if (jQuery && opts.parent instanceof jQuery) {
+          return opts.parent[0];
+        } else if (typeof opts.parent === "string") {
+          return document.querySelector(opts.parent);
+        }
+      })();
+      nodes = [];
+      collection = new InputCollection();
+      _ref = opts.els;
+      _fn = function() {
+        var attr, cl, e, _j, _k, _len1, _len2, _ref1, _ref2;
+        e = document.createElement(el.tagName);
+        e.id = el.id || "";
+        e.name = el.name || "";
+        e.textContent = el.textContent || "";
+        _ref1 = el.classList;
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          cl = _ref1[_j];
+          e.classList.add(cl);
+        }
+        if (el.attr) {
+          _ref2 = el.attr;
+          for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+            attr = _ref2[_k];
+            e.setAttribute(attr.name, attr.val);
+          }
+        }
+        nodes.push(e);
+        if (e.tagName === "INPUT") {
+          return collection.push(e);
+        }
+      };
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        el = _ref[_i];
+        _fn();
+      }
+      for (_j = 0, _len1 = nodes.length; _j < _len1; _j++) {
+        node = nodes[_j];
+        parent.appendChild(node);
+      }
+      return collection;
     };
     return root.InputClasses = {
       Base: Base,

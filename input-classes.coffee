@@ -10,6 +10,9 @@ do ( root = do ->
       return if c then c.toUpperCase() else ""
     return camel.charAt(0).toLowerCase() + camel.slice(1)
 
+
+
+
   class Base
     constructor : ( el ) ->
       this.el = el
@@ -21,7 +24,7 @@ do ( root = do ->
       if arguments.length
         return this._setValue( arguments )
       else
-        return if this._hasValue() and this.validate() then this.el.value else false
+        return if this._hasValue() and this.validate() then this._getValue() else false
 
     values : ->
       return this.value( arguments )
@@ -36,7 +39,11 @@ do ( root = do ->
       return !!this.el.value
 
     _setValue : ( value ) ->
+      this.dispatchEvent new Event "change"
       return ( this.el.value = value )
+
+    _getValue : ->
+      return this.el.value
 
     _checkable : ->
       return "checked" of this.el
@@ -55,10 +62,17 @@ do ( root = do ->
     dispatchEvent : ( event ) ->
       this.el.dispatchEvent( event )
 
+
+
+
   class InputComponent extends Base
     constructor : ( el ) ->
       super( el )
 
+
+
+  # This class is used for inputs matching [type="radio"] or [type="checkbox"]
+  # It provides methods for getting 
   class CheckableComponent extends Base
 
     constructor : ( el ) ->
@@ -73,11 +87,8 @@ do ( root = do ->
     _switch : ( bool ) ->
       if typeof bool is "undefined" or this.isChecked() isnt bool
         this.el.checked = !this.el.checked
-        this._dispatchChange()
+        this.dispatchEvent new Event "change"
       return this.isChecked()
-
-    _dispatchChange : ->
-      this.el.dispatchEvent new Event "change"
 
     isChecked : ->
       return this.el.checked
@@ -87,6 +98,9 @@ do ( root = do ->
         this._setValue( arguments )
       else
         return if this.isChecked() then super() else return false
+
+
+
 
   class SelectComponent extends Base
     constructor : ( el ) ->
@@ -100,15 +114,31 @@ do ( root = do ->
       Array.prototype.filter.call options, ( option ) ->
         return option.selected and not option.disabled
 
+
+
+  # Array-like class that holds a group of inputs that should be logically connected
   class InputCollection extends Array
     constructor : ( selector ) ->
       if selector instanceof NodeList
         nodeList = selector
       else
         nodeList = document.querySelectorAll( selector )
+
       for node, i in nodeList
-        this.push InputFactory nodeList.item( i )
+        this.push nodeList.item( i )
       return this
+
+    push : ( el ) ->
+      unless el instanceof Node
+        if jQuery and el instanceof jQuery
+          el = el[0]
+        else if typeof el is "string"
+          el = document.querySelector( el )
+        else
+          console.warn( "Invalid param passed to InputCollection::push") 
+          return false
+
+      super( InputFactory( el ) )
 
     value : ->
       results = ( val for input in this when val = input.value() )
@@ -156,6 +186,8 @@ do ( root = do ->
             input[if onOff then "check" else "f"]
 
 
+
+
   InputFactory = ( el ) ->
     classMatcher =
       input :
@@ -181,6 +213,41 @@ do ( root = do ->
         else
           console.warn( "Invalid element passed to InputFactory" ) 
           return false
+
+  InputBuilder = ( opts ) ->
+
+    parent = do ->
+      if opts.parent instanceof Node
+        return opts.parent
+      else if jQuery and opts.parent instanceof jQuery
+        return opts.parent[0]
+      else if typeof opts.parent is "string"
+        return document.querySelector( opts.parent )
+
+    nodes = []
+    
+    collection = new InputCollection()
+
+    for el in opts.els
+      do ->
+        e = document.createElement( el.tagName )
+        e.id = el.id or ""
+        e.name = el.name or ""
+        e.textContent = el.textContent or ""
+        e.classList.add( cl ) for cl in el.classList
+        if el.attr
+          for attr in el.attr
+            e.setAttribute( attr.name, attr.val )
+        nodes.push( e )
+
+        if e.tagName is "INPUT"
+          collection.push( e )
+
+    for node in nodes
+      parent.appendChild( node )
+
+    return collection 
+
 
 
 

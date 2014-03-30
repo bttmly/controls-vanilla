@@ -4,8 +4,18 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  (function(root) {
-    var BaseControl, ButtonControl, CheckableControl, ControlCollection, Factory, SelectControl, buildControlObject, each, filter, qs, qsa, slice;
+  (function(root, factory) {
+    if (typeof define === "function" && define.amd) {
+      define(["exports"], function(exports) {
+        root.Controls = factory(root, exports);
+      });
+    } else if (typeof exports !== "undefined") {
+      factory(root, exports);
+    } else {
+      root.Controls = factory(root, {});
+    }
+  })(this, function(root, Controls) {
+    var BaseControl, ButtonControl, CheckableControl, ControlCollection, SelectControl, buildControlObject, controlFactory, each, filter, qs, qsa, slice;
     qs = document.querySelector.bind(document);
     qsa = document.querySelectorAll.bind(document);
     each = Function.prototype.call.bind(Array.prototype.forEach);
@@ -266,75 +276,55 @@
           return new ButtonControl(el);
       }
     };
-    Factory = function(e, options) {
+    controlFactory = function(e, options) {
       var buildOptions, components, factoryInner, tagNames;
       components = [];
       tagNames = ["INPUT", "SELECT", "BUTTON"];
       factoryInner = function(elParam) {
         var els, _ref;
-        console.log("inner started");
-        console.log(elParam);
         if (elParam instanceof ControlCollection) {
-          console.log("in ControlCollection");
-          console.log(elParam);
           components.push(elParam);
           return;
         } else if (typeof elParam === "string") {
-          console.log("in string");
-          console.log(elParam);
           factoryInner(qsa(elParam));
           return;
         } else if (elParam instanceof Node && !(_ref = elParam.tagName, __indexOf.call(tagNames, _ref) >= 0)) {
-          console.log("in other node");
-          console.log(elParam);
           els = [];
           each(tagNames, function(name) {
-            var group;
-            console.log("Each tagName for:");
-            console.log(name);
-            group = elParam.getElementsByTagName(name);
-            console.log(group);
-            els = els.concat(group);
+            els = els.concat(elParam.getElementsByTagName(name));
           });
-          console.log("control children of otherNode");
-          console.log(els);
           factoryInner(els);
           return;
         } else if (elParam instanceof Node) {
-          console.log("in control node");
-          console.log(elParam);
           components.push(buildControlObject(elParam));
           return;
         } else if (typeof elParam.length !== "undefined") {
-          console.log("in length");
-          console.log(elParam);
           each(elParam, function(item) {
-            console.log("in each");
-            console.log(item);
             factoryInner(item);
           });
           return;
         } else {
-          console.log("FELL THROUGH!!!");
-          console.log(elParam);
+          console.warn("Factory call fell through.");
         }
       };
       factoryInner(e);
       options || (options = {});
       buildOptions = {};
-      if (typeof e === "string") {
-        buildOptions.id = e.substr(1);
-      }
+      buildOptions.id = options.id || (function() {
+        if (e instanceof Node) {
+          return e.getAttribute(controlFactory.identifyingAttribute);
+        } else if (typeof e === "string") {
+          if (e.charAt(0 === "#" || e.charAt(0 === "."))) {
+            return e.substr(1);
+          } else {
+            return e;
+          }
+        }
+      })();
       return new ControlCollection(components, buildOptions);
     };
-    Factory.identifyingAttribute = "id";
-    return root.Controls = Factory;
-  })((function() {
-    if (typeof exports !== "undefined") {
-      return exports;
-    } else {
-      return window;
-    }
-  })());
+    controlFactory.identifyingAttribute = "id";
+    return controlFactory;
+  });
 
 }).call(this);

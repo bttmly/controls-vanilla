@@ -1,9 +1,25 @@
-do ( root = do ->
-  if typeof exports isnt "undefined"
-    return exports
+# Controls.coffee
+# v0.1.0
+# Nick Bottomley, 2014
+# MIT License
+
+( ( root, factory ) ->
+  if typeof define is "function" and define.amd
+    define [
+      "exports"
+    ], ( exports ) ->
+      root.Controls = factory( root, exports )
+      return  
+
+  else if typeof exports isnt "undefined"
+    factory( root, exports )
+
   else
-    return window
-) ->
+    root.Controls = factory( root, {} )
+
+  return
+
+)( this, ( root, Controls ) ->
 
   qs = document.querySelector.bind( document )
   qsa = document.querySelectorAll.bind( document )
@@ -147,6 +163,7 @@ do ( root = do ->
 
 
 
+
   buildControlObject = ( el ) ->
     switch el.tagName
       when "INPUT"
@@ -161,93 +178,60 @@ do ( root = do ->
       else
         return
 
-  Factory = ( e, options ) ->
+  controlFactory = ( e, options ) ->
 
     components = []
     tagNames = ["INPUT", "SELECT", "BUTTON"]
 
     factoryInner = ( elParam ) ->
 
-      console.log "inner started"
-      console.log elParam
-
-      # "Branch 1"
       if elParam instanceof ControlCollection
-        console.log "in ControlCollection"
-        console.log elParam
-
         components.push elParam
         return
 
-      # "Branch 2"
       else if typeof elParam is "string"
-        console.log "in string"
-        console.log elParam
-
         factoryInner qsa elParam
         return 
 
       else if elParam instanceof Node and not ( elParam.tagName in tagNames )
-        console.log "in other node"
-        console.log elParam
-
         els = []
         each tagNames, ( name ) ->
-          console.log "Each tagName for:"
-          console.log name
-
-          group = elParam.getElementsByTagName name
-
-          console.log group
-          els = els.concat group
+          els = els.concat elParam.getElementsByTagName name
           return
-
-        console.log "control children of otherNode"
-        console.log els
-
         factoryInner els
         return
 
-      # "Branch 5"
       else if elParam instanceof Node
-        console.log "in control node"
-        console.log elParam
-
         components.push buildControlObject elParam
         return
 
-      # "Branch 3"
-      # Confusingly, a Select node has length.
       else if typeof elParam.length isnt "undefined"
-        console.log "in length"
-        console.log elParam
-
         each elParam, ( item ) ->
-          console.log "in each"
-          console.log item
-
           factoryInner item
           return
         return
       
       else
-        console.log "FELL THROUGH!!!"
-        console.log elParam
+        console.warn "Factory call fell through."
 
       return
 
     factoryInner( e )
-
-
     options or= {}
     buildOptions = {}
-
-    if typeof e is "string"
-      buildOptions.id = e.substr 1
+    buildOptions.id = options.id or do ->
+      if e instanceof Node
+        return e.getAttribute controlFactory.identifyingAttribute
+      else if typeof e is "string"
+        if e.charAt 0 is "#" or e.charAt 0 is "."
+          return e.substr 1
+        else
+          return e
 
     return new ControlCollection components, buildOptions
 
-  # User can configure this.
-  Factory.identifyingAttribute = "id"
+  controlFactory.identifyingAttribute = "id"
 
-  root.Controls = Factory
+  return controlFactory
+
+)

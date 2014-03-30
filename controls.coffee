@@ -187,7 +187,6 @@ do ( root = do ->
         factoryInner qsa elParam
         return 
 
-      # "Branch 6"
       else if elParam instanceof Node and not ( elParam.tagName in tagNames )
         console.log "in other node"
         console.log elParam

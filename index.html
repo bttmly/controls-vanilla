@@ -15,7 +15,6 @@
       margin: 0;
       padding: 0;
       max-height: 100vh;
-      font-size: 112.5%;
     }
 
     body {
@@ -100,7 +99,6 @@
 
     .wrapper {
       margin: 0 auto;
-      max-height: 100%;
       position: relative;
     }
 
@@ -196,14 +194,14 @@
 
 <body>
   <div class="wrapper">
-    <div class="input-pane">
+    <div class="input-pane" id="controls">
 
       <div class="control-wrapper">
         <p>Single text input.</p>
         <input type="text" id="input1">
       </div>
 
-      <div class="control-wrapper">
+      <div class="control-wrapper" id="checkbox-wrapper">
         <p>Checkbox group.</p>
         <label>
           <input type="checkbox" id="checkbox1" name="checkbox" value="bourbon">
@@ -220,7 +218,7 @@
       </div>
 
 
-      <div class="control-wrapper">
+      <div class="control-wrapper" id="radio-wrapper">
         <p>Radio group.</p>
         <label>
           <input type="radio" id="radio1" name="radio" value="neat">
@@ -236,7 +234,7 @@
         </label>     
       </div>
 
-      <div class="control-wrapper">
+      <div class="control-wrapper" id="single-select-wrapper">
         <p>Single select.</p>
         <select id="single-select">
           <option selected disabled>Pick one...</option>
@@ -246,7 +244,7 @@
         </select>
       </div>
 
-      <div class="control-wrapper">
+      <div class="control-wrapper" id="multi-select-wrapper">
         <p>Multiple select.</p>
         <select multiple id="multi-select">
           <option disabled>Pick some...</option>
@@ -256,11 +254,15 @@
         </select>
       </div>
 
-      <div class="control-wrapper hash-test">
+      <div class="control-wrapper hash-test" id="text-fields-wrapper">
         <p>Text input group w/ values as hash.</p>
         <input id="email-input" type="text" placeholder="Email address">
         <input id="first-name-input" type="text" placeholder="First name">
         <input id="last-name-input" type="text" placeholder="Last name">
+      </div>
+
+      <div class="control-wrapper">
+        <button>Control Button</button>
       </div>
 
     </div>
@@ -274,18 +276,77 @@
 
   </div>
 
-  <script src="input-classes.js"></script>
+  <script src="controls.js"></script>
   <script>
     (function(){
 
-      var InputFactory = InputClasses.InputFactory;
+      var $$ = Controls
 
       var bracketize = function( str ) {
         return "[" + str + "]";
-      }
+      };
 
-      var Log = {}
-      Log.el = document.querySelector( "#console-output" )
+      var builderOpts = {
+        parent: ".control-wrapper.inserted-controls",
+        els: [
+          {
+            tagName: "input",
+            id: "inserted-input-1",
+            classList: ["class1", "class2", "class3"],
+            name: "radio2",
+            attrs: [
+              {
+                name: "required",
+                value: true
+              }, {
+                name: "type",
+                value: "radio"
+              }, {
+                name: "value",
+                value: "regular"
+              }
+            ]
+          }, {
+            tagName: "label",
+            textContent: "Regular",
+            attrs: [
+              {
+                name: "for",
+                value: "inserted-input-1"
+              }
+            ]
+          }, {
+            tagName: "input",
+            id: "inserted-input-2",
+            classList: ["class1", "class2", "class3"],
+            name: "radio2",
+            attrs: [
+              {
+                name: "required",
+                value: true
+              }, {
+                name: "type",
+                value: "radio"
+              }, {
+                name: "value",
+                value: "cask"
+              }
+            ]
+          }, {
+            tagName: "label",
+            textContent: "Cask strength",
+            attrs: [
+              {
+                name: "for",
+                value: "inserted-input-2"
+              }
+            ]
+          }
+        ]
+      };
+
+      var Log = {};
+      Log.el = document.querySelector( "#console-output" );
       Log.erase = function() { 
         this.el.innerHTML = "";
         return this;
@@ -302,40 +363,56 @@
         Log.erase();
       });
 
-      window.testInputs = {};
+      // window.testInputs = Object.create( null )
+      // testInputs.input1 = $$( "#input1" );
+      // testInputs.checkboxes = $$( "#checkbox-wrapper" );
+      // testInputs.radios = $$( "#radio-wrapper" );
+      // testInputs.singleSelect = $$( "#single-select-wrapper" );
+      // testInputs.multiSelect = $$( "#multi-select-wrapper" );
+      // testInputs.hashGroup = $$( "#text-fields-wrapper" );
 
-      testInputs.input1 = InputFactory( "#input1" )
-      testInputs.checkboxes = InputFactory( "[name='checkbox']" );
-      testInputs.radios = InputFactory( "[name='radio']" );
-      testInputs.singleSelect = InputFactory( "#single-select" );
-      testInputs.multiSelect = InputFactory( "#multi-select" );
-      testInputs.hashGroup = InputFactory( ".hash-test input" );
+      // testInputArray = []
 
-      testInputs.input1.addEventListener( "change", function( event ) {
-        Log.print( JSON.stringify( this.value()));
+      // for ( input in testInputs ) {
+      //   testInputArray.push( testInputs[input] );
+      // }
+
+      window.masterCollection = $$( "#controls" )
+      masterCollection.on( "change", function( event ) {
+        Log.print( JSON.stringify( this.value() ) );
       });
 
-      testInputs.checkboxes.addEventListener( "change", function( event ) {
-        Log.print( JSON.stringify( this.value()));
-      });
+      // testInputs.dynamicCollection = Builder( builderOpts );
 
-      testInputs.radios.addEventListener( "change", function( event ) {
-        Log.print( JSON.stringify( this.value()));
-      });
+      // testInputs.input1.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
 
-      testInputs.singleSelect.addEventListener( "change", function( event ) {
-        Log.print( JSON.stringify( this.value()));
-      });
+      // testInputs.checkboxes.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
 
-      testInputs.multiSelect.addEventListener( "change", function( event ) {
-        Log.print( JSON.stringify( this.value()));
-      });
+      // testInputs.radios.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
 
-      testInputs.hashGroup.addEventListener( "change", function( event ) {
-        Log.print( JSON.stringify( this.hashValue()));
-      });
+      // testInputs.singleSelect.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
 
-    }).call( this )
+      // testInputs.multiSelect.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
+
+      // testInputs.hashGroup.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
+
+      // testInputs.dynamicCollection.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
+
+    }).call( this );
 
 
   </script>

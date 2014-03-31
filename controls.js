@@ -26,7 +26,6 @@
         this.el = el;
         this.id = el.id;
         this.listeners = [];
-        this;
       }
 
       BaseControl.prototype.required = function(param) {
@@ -51,12 +50,8 @@
         if (param) {
           this.el.value = param;
           return this;
-        } else {
-          if (this.valid()) {
-            return this.el.value;
-          } else {
-
-          }
+        } else if (this.valid()) {
+          return this.el.value;
         }
       };
 
@@ -131,9 +126,7 @@
       };
 
       SelectControl.prototype.selected = function() {
-        var opts;
-        opts = this.el.querySelectorAll("option");
-        return filter(opts, function(opt) {
+        return filter(this.el.querySelectorAll("option"), function(opt) {
           return opt.selected && !opt.disabled;
         });
       };
@@ -226,13 +219,10 @@
       };
 
       ControlCollection.prototype.off = function(handler) {
-        var component, index, _i, _len;
-        if ((index = this.listeners.indexOf(handler)) > -1) {
-          this.listeners.splice(index, 1);
-          for (_i = 0, _len = this.length; _i < _len; _i++) {
-            component = this[_i];
-            component.off(arguments);
-          }
+        var component, _i, _len;
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          component = this[_i];
+          component.off(arguments);
         }
         return this;
       };

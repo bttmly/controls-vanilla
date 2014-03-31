@@ -32,28 +32,27 @@
       @el = el
       @id = el.id
       @listeners = []
-      @
 
     required : ( param ) ->
       if param
         @el.required = !!param
-        return this
+        return @
       else
         return @el.required
 
     disabled : ( param ) ->
       if param
         @el.disabled = !!param
-        return this
+        return @
       else
         return @el.disabled
 
     value : ( param ) ->
       if param
         @el.value = param
-        return this
-      else
-        if @valid() then return @el.value else 
+        return @
+      else if @valid()
+        return @el.value
 
     valid : ->
       if @el.checkValidity
@@ -61,18 +60,17 @@
       else
         return true
 
-
     on : ( eventType, handler ) ->
       @el.addEventListener eventType, handler
-      @
+      return @
 
     off : ( handler ) ->
       @el.removeEventListener handler
-      @
+      return @
 
     trigger : ( eventType ) ->
       @el.dispatchEvent new CustomEvent eventType
-      @
+      return @
 
   class CheckableControl extends BaseControl
     constructor : ( el ) ->
@@ -93,13 +91,14 @@
       return ( option.value for option in this.selected() )
 
     selected : ->
-      opts = this.el.querySelectorAll( "option" )
-      filter opts, ( opt ) ->
+      filter this.el.querySelectorAll( "option" ), ( opt ) ->
         return opt.selected and not opt.disabled
 
   class ButtonControl extends BaseControl
     constructor : ( el ) ->
       super( el )
+
+
 
 
 
@@ -110,7 +109,7 @@
 
     value : ->
       values = []
-      for component in this
+      for component in @
         val = component.value()
         if val and val.length then values.push
           id: component.id
@@ -119,45 +118,45 @@
 
     valueHash : ->
       values = []
-      for component in this
+      for component in @
         values.push component.value()
       return values
 
     disabled : ( param ) ->
       results = {}
-      for component in this
+      for component in @
         if param then component.disabled( param )
         results[component.id] = component.disabled()
       return results
 
     required : ( param ) ->
       results = {}
-      for component in this
+      for component in @
         if param then component.required( param )
         results[component.id] = component.required()
       return results
 
     on : ( eventType, handler ) ->
-      handler = handler.bind( this )
-      for component in this
+      handler = handler.bind @
+      for component in @
         component.on( eventType, handler )
-      return this
+      @
 
     off : ( handler ) ->
-      if ( index = this.listeners.indexOf( handler ) ) > -1
-        this.listeners.splice index, 1
-        for component in this
-          component.off( arguments )
-      return this
+      # if ( index = this.listeners.indexOf( handler ) ) > -1
+      #   this.listeners.splice index, 1
+      for component in @
+        component.off( arguments )
+      @
 
     trigger : ( eventType, handler ) ->
-      handler = handler.bind( this )
-      for component in this
+      handler = handler.bind @
+      for component in @
         component.trigger( arguments )
-      return this
+      @
 
     getComponentById : ( id ) ->
-      for component in this
+      for component in @
         return component if component.id
       return false
 

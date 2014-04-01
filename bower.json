@@ -1,0 +1,29 @@
+{
+  "name": "controls.js",
+  "main": "controls.js",
+  "version": "0.1.0",
+  "homepage": "https://github.com/nickb1080/controls.js",
+  "authors": [
+    "Nick Bottomley <nhbottomley@gmail.com>"
+  ],
+  "description": "Manipulate control elements w/ JS",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "input",
+    "form",
+    "control"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/bower_components",
+    "test",
+    "tests"
+  ]
+}

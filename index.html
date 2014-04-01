@@ -1,14 +1,14 @@
 <html>
 <head>
   <title>JS Classes for HTML Inputs</title>
-</head>
+<!--   <link href='http://fonts.googleapis.com/css?family=Open+Sans:300|Inconsolata' rel='stylesheet' type='text/css'> -->
   <style>
 
-    *,
-    *:before,
-    *:after {
-      box-sizing: border-box;
-    }
+*, *:before, *:after {
+   -moz-box-sizing:    border-box;   /* Firefox 1, probably can drop this */
+   -webkit-box-sizing: border-box;   /* Safari 3-4, also probably droppable */
+    box-sizing:        border-box;   /* Everything else */
+}
 
     body,
     html {
@@ -18,9 +18,11 @@
     }
 
     body {
-      font-family: "Avenir Next", "Avenir", "Helvetica Neue", "Helvetica", sans-serif;
+      font-family: "Lato", sans-serif;
+      font-weight: 300;
       color: #333;
       padding: 2em;
+      background: whitesmoke;
     }
 
     h1, h2, h3, h4, h5, h6, p {
@@ -44,7 +46,7 @@
     select {
       -webkit-appearance: none;
       border: 1px solid slategray;
-      box-shadow: 0 0 0 .5rem transparent;
+      box-shadow: 0 0 0 .5em transparent;
       -webkit-transition: box-shadow .25s ease-in-out;
       transition: box-shadow .25s ease-in-out;
     }
@@ -95,32 +97,42 @@
       background: transparent;
     }
 
-
-
-
-
-
     .wrapper {
-      width: 75%;
       margin: 0 auto;
-      display: flex;
-      max-height: 100%;
+      position: relative;
     }
 
     .wrapper > div {
-      padding: 1rem;
-      flex: 1;
-      max-height: 100%;
+      width: -webkit-calc(50% - 2em);
+      width: calc(50% - 2em);
+    }
+
+    .wrapper > div:first-of-type {
+
+    }
+
+    .wrapper > div:last-of-type {
+
     }
 
     .input-pane input[type="text"] {
       display: block;
       width: 100%;
-      margin: 0 0 .5em 0;
+    }
+
+    .input-pane input[type="text"] + input[type="text"] {
+      margin-top: 1em;
     }
 
     .control-wrapper {
-      margin: 2rem 0;
+      margin: 0 0 2em 0;
+      padding: .5em;
+      background: white;
+      border: 1px solid #ddd;
+    }
+
+    .control-wrapper p {
+      margin: 0 0 .5em 0;
     }
 
     input, label, button {
@@ -128,7 +140,7 @@
     }
 
     button {
-      margin: 1rem 0;
+      margin: 1em 0;
     }
 
     input[type='text'] {
@@ -141,16 +153,23 @@
     }
 
     pre {
-      font-family: "Inconsolata", "Monaco", monospace;
+      font-family: "Inconsolata", monospace;
+    }
+
+    .console-pane {
+      font-family: "Inconsolata", monospace;
+      position: fixed;
+      top: 2em;
+      right: 2em;
+      width: 50%;
+      height: 100%;
     }
 
     #console-output {
       color: springgreen;
       background: #333;
-/*      max-height: 50vh;
-      height: 50vh;*/
-      height: 80vh;
-      max-height: 80vh;
+      height: -webkit-calc(100% - 4em);
+      height: calc(100% - 4em);
       overflow-y: scroll;
     }
 
@@ -158,139 +177,242 @@
       margin: 1em;
     }
 
-
-
-
+    #clear-console-button {
+      font-family: "Inconsolata", monospace;
+      position: fixed;
+      color: springgreen;
+      border-color: springgreen;
+      top: 2em;
+      right: 3em;
+      background: #333;
+    }
+    #clear-console-button:focus {
+      outline: 2px solid springgreen;
+    }
   </style>
+</head>
+
 <body>
   <div class="wrapper">
-    <div class="input-pane">
-
-      <input type="text" id="input1">
-
-      <input type="text" id="input2">
-
-      <input type="text" id="input3">
-
-      <input type="text" id="input4">
+    <div class="input-pane" id="controls">
 
       <div class="control-wrapper">
+        <p>Single text input.</p>
+        <input type="text" id="input1">
+      </div>
+
+      <div class="control-wrapper" id="checkbox-wrapper">
+        <p>Checkbox group.</p>
         <label>
           <input type="checkbox" id="checkbox1" name="checkbox" value="bourbon">
           Bourbon
         </label>
         <label>
-          <input type="checkbox" id="checkbox1" name="checkbox" value="rye">
+          <input type="checkbox" id="checkbox2" name="checkbox" value="rye">
           Rye
         </label>        
         <label>
-          <input type="checkbox" id="checkbox1" name="checkbox" value="scotch">
+          <input type="checkbox" id="checkbox3" name="checkbox" value="scotch">
           Scotch
         </label>        
-        <button id="checkbox-group-button">Print Checked Values</button>
       </div>
 
 
-      <div class="control-wrapper">
+      <div class="control-wrapper" id="radio-wrapper">
+        <p>Radio group.</p>
         <label>
-          <input type="radio" id="checkbox1" name="radio" value="neat">
+          <input type="radio" id="radio1" name="radio" value="neat">
           Neat
         </label>        
         <label>
-          <input type="radio" id="checkbox1" name="radio" value="rocks">
+          <input type="radio" id="radio2" name="radio" value="rocks">
           On the rocks
         </label> 
         <label>
-          <input type="radio" id="checkbox1" name="radio" value="water">
+          <input type="radio" id="radio3" name="radio" value="water">
           With water
         </label>     
-        <button id="radio-group-button">Print Checked Value</button>
       </div>
 
-      <div class="control-wrapper">
+      <div class="control-wrapper" id="single-select-wrapper">
+        <p>Single select.</p>
         <select id="single-select">
           <option selected disabled>Pick one...</option>
           <option value="10-year">10 year</option>
           <option value="12-year">12 year</option>
           <option value="15-year">15 year</option>
         </select>
-        <button id="single-select-button">Print Selected Option</button>
       </div>
 
-      <div class="control-wrapper">
+      <div class="control-wrapper" id="multi-select-wrapper">
+        <p>Multiple select.</p>
         <select multiple id="multi-select">
           <option disabled>Pick some...</option>
           <option value="first">One Thing</option>
           <option value="second">Another thing</option>
           <option value="third">Third thing</option>
         </select>
-        <button id="multi-select-button">Print Selected Options</button>
+      </div>
+
+      <div class="control-wrapper hash-test" id="text-fields-wrapper">
+        <p>Text input group w/ values as hash.</p>
+        <input id="email-input" type="text" placeholder="Email address">
+        <input id="first-name-input" type="text" placeholder="First name">
+        <input id="last-name-input" type="text" placeholder="Last name">
+      </div>
+
+      <div class="control-wrapper">
+        <button>Control Button</button>
       </div>
 
     </div>
 
     <div class="console-pane">
-      <div id="console-output"></div>
+      <div id="console-output">
+      </div>
     </div>
+
+    <button id="clear-console-button">Clear</button>
 
   </div>
 
-  <script src="input-classes.js"></script>
+  <script src="controls.js"></script>
   <script>
     (function(){
 
-      InputMaker = window.InputMaker
+      var $$ = Controls
 
-      window.Log = {}
-      Log.el = document.querySelectorAll( "#console-output" )[0]
+      var bracketize = function( str ) {
+        return "[" + str + "]";
+      };
+
+      var builderOpts = {
+        parent: ".control-wrapper.inserted-controls",
+        els: [
+          {
+            tagName: "input",
+            id: "inserted-input-1",
+            classList: ["class1", "class2", "class3"],
+            name: "radio2",
+            attrs: [
+              {
+                name: "required",
+                value: true
+              }, {
+                name: "type",
+                value: "radio"
+              }, {
+                name: "value",
+                value: "regular"
+              }
+            ]
+          }, {
+            tagName: "label",
+            textContent: "Regular",
+            attrs: [
+              {
+                name: "for",
+                value: "inserted-input-1"
+              }
+            ]
+          }, {
+            tagName: "input",
+            id: "inserted-input-2",
+            classList: ["class1", "class2", "class3"],
+            name: "radio2",
+            attrs: [
+              {
+                name: "required",
+                value: true
+              }, {
+                name: "type",
+                value: "radio"
+              }, {
+                name: "value",
+                value: "cask"
+              }
+            ]
+          }, {
+            tagName: "label",
+            textContent: "Cask strength",
+            attrs: [
+              {
+                name: "for",
+                value: "inserted-input-2"
+              }
+            ]
+          }
+        ]
+      };
+
+      var Log = {};
+      Log.el = document.querySelector( "#console-output" );
       Log.erase = function() { 
         this.el.innerHTML = "";
         return this;
       }
       Log.print = function( string ) { 
-        string = "<pre>" + string + "</pre>"
+        string = "<pre>" + string + "</pre>";
         this.el.innerHTML += string;
-        this.el.scrollTop = this.el.scrollHeight
+        this.el.scrollTop = this.el.scrollHeight;
         return this; 
       }
-      Log.cleanup = function() {
 
-      }
-
-
-      var input1 = new InputMaker( "#input1" )
-      var checkboxes = new InputGroup( "[name='checkbox']" );
-      var checkButton = document.querySelector( "#checkbox-group-button" )
-      var radios = new InputGroup( "[name='radio']" );
-      var radioButton = document.querySelector( "#radio-group-button" )
-
-      var singleSelect = new InputMaker( "#single-select" );
-      var singleSelectButton = document.querySelector( "#single-select-button" )
-
-      var multiSelect = new InputMaker( "#multi-select" );
-      var multiSelectButton = document.querySelector( "#multi-select-button" )
-
-      input1.addEventListener("change", function( event ) {
-        Log.print( this.value );
+      var clearButton = document.querySelector( "#clear-console-button" );
+      clearButton.addEventListener( "click", function( event ) {
+        Log.erase();
       });
 
-      checkButton.addEventListener("click", function( event ) {
-        Log.print( checkboxes.values() );
+      // window.testInputs = Object.create( null )
+      // testInputs.input1 = $$( "#input1" );
+      // testInputs.checkboxes = $$( "#checkbox-wrapper" );
+      // testInputs.radios = $$( "#radio-wrapper" );
+      // testInputs.singleSelect = $$( "#single-select-wrapper" );
+      // testInputs.multiSelect = $$( "#multi-select-wrapper" );
+      // testInputs.hashGroup = $$( "#text-fields-wrapper" );
+
+      // testInputArray = []
+
+      // for ( input in testInputs ) {
+      //   testInputArray.push( testInputs[input] );
+      // }
+
+      window.masterCollection = $$( "#controls" )
+      masterCollection.on( "change", function( event ) {
+        Log.print( JSON.stringify( this.value() ) );
       });
 
-      radioButton.addEventListener("click", function( event ) {
-        Log.print( radios.values() );
-      });
+      // testInputs.dynamicCollection = Builder( builderOpts );
 
-      singleSelectButton.addEventListener("click", function( event ) {
-        Log.print( singleSelect.values() )
-      });
+      // testInputs.input1.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
 
-      multiSelectButton.addEventListener("click", function( event ) {
-        Log.print( multiSelect.values() )
-      });
+      // testInputs.checkboxes.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
 
-    }).call( this )
+      // testInputs.radios.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
+
+      // testInputs.singleSelect.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
+
+      // testInputs.multiSelect.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
+
+      // testInputs.hashGroup.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
+
+      // testInputs.dynamicCollection.on( "change", function( event ) {
+      //   Log.print( JSON.stringify( this.value() ) );
+      // });
+
+    }).call( this );
 
 
   </script>

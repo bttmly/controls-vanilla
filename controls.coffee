@@ -88,7 +88,10 @@
       super( el ) 
 
     value : ->
-      return ( option.value for option in this.selected() )
+      results = []
+      for option in this.selected()
+        if option.value then results.push( option.value )
+      return results
 
     selected : ->
       filter this.el.querySelectorAll( "option" ), ( opt ) ->
@@ -116,7 +119,7 @@
           val: val
       return values
 
-    valueHash : ->
+    valueArray : ->
       values = []
       for component in @
         values.push component.value()
@@ -140,20 +143,20 @@
       handler = handler.bind @
       for component in @
         component.on( eventType, handler )
-      @
+      return this
 
     off : ( handler ) ->
       # if ( index = this.listeners.indexOf( handler ) ) > -1
       #   this.listeners.splice index, 1
       for component in @
         component.off( arguments )
-      @
+      return this
 
     trigger : ( eventType, handler ) ->
       handler = handler.bind @
       for component in @
         component.trigger( arguments )
-      @
+      return this
 
     getComponentById : ( id ) ->
       for component in @

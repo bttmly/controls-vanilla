@@ -112,17 +112,16 @@
       }
 
       SelectControl.prototype.value = function() {
-        var option;
-        return (function() {
-          var _i, _len, _ref, _results;
-          _ref = this.selected();
-          _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            option = _ref[_i];
-            _results.push(option.value);
+        var option, results, _i, _len, _ref;
+        results = [];
+        _ref = this.selected();
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          option = _ref[_i];
+          if (option.value) {
+            results.push(option.value);
           }
-          return _results;
-        }).call(this);
+        }
+        return results;
       };
 
       SelectControl.prototype.selected = function() {
@@ -172,7 +171,7 @@
         return values;
       };
 
-      ControlCollection.prototype.valueHash = function() {
+      ControlCollection.prototype.valueArray = function() {
         var component, values, _i, _len;
         values = [];
         for (_i = 0, _len = this.length; _i < _len; _i++) {

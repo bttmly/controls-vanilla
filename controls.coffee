@@ -132,14 +132,14 @@
     disabled : ( param ) ->
       results = {}
       for component in this
-        if param then component.disabled( param )
+        if param? then component.disabled( param )
         results[component.id] = component.disabled()
       return results
 
     required : ( param ) ->
       results = {}
       for component in this
-        if param then component.required( param )
+        if param? then component.required( param )
         results[component.id] = component.required()
       return results
 

@@ -191,7 +191,7 @@
         results = {};
         for (_i = 0, _len = this.length; _i < _len; _i++) {
           component = this[_i];
-          if (param) {
+          if (param != null) {
             component.disabled(param);
           }
           results[component.id] = component.disabled();
@@ -204,7 +204,7 @@
         results = {};
         for (_i = 0, _len = this.length; _i < _len; _i++) {
           component = this[_i];
-          if (param) {
+          if (param != null) {
             component.required(param);
           }
           results[component.id] = component.required();

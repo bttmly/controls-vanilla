@@ -34,21 +34,21 @@
       @listeners = []
 
     required : ( param ) ->
-      if param?
+      if arguments.length
         @el.required = !!param
         return @
       else
         return @el.required
 
     disabled : ( param ) ->
-      if param?
+      if arguments.length
         @el.disabled = !!param
         return @
       else
         return @el.disabled
 
     value : ( param ) ->
-      if param?
+      if arguments.length
         @el.value = param
         return @
       else if @valid()

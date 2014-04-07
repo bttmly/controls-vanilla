@@ -29,7 +29,7 @@
       }
 
       BaseControl.prototype.required = function(param) {
-        if (param != null) {
+        if (arguments.length) {
           this.el.required = !!param;
           return this;
         } else {
@@ -38,7 +38,7 @@
       };
 
       BaseControl.prototype.disabled = function(param) {
-        if (param != null) {
+        if (arguments.length) {
           this.el.disabled = !!param;
           return this;
         } else {
@@ -47,7 +47,7 @@
       };
 
       BaseControl.prototype.value = function(param) {
-        if (param != null) {
+        if (arguments.length) {
           this.el.value = param;
           return this;
         } else if (this.valid()) {

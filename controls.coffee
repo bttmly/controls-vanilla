@@ -34,21 +34,21 @@
       @listeners = []
 
     required : ( param ) ->
-      if param
+      if param?
         @el.required = !!param
         return @
       else
         return @el.required
 
     disabled : ( param ) ->
-      if param
+      if param?
         @el.disabled = !!param
         return @
       else
         return @el.disabled
 
     value : ( param ) ->
-      if param
+      if param?
         @el.value = param
         return @
       else if @valid()
@@ -109,60 +109,68 @@
     constructor: ( components, options ) ->
       this.push( component ) for component in components
       this.id = options.id
+      this.listners = {}
 
     value : ->
       values = []
-      for component in @
+      for component in this
         val = component.value()
         if val and val.length then values.push
           id: component.id
           val: val
       return values
 
-    valueArray : ->
+    valueArray : ( deep ) ->
       values = []
-      for component in @
-        values.push component.value()
+      for component in this
+        if deep 
+          values.push( component.valueArray() or component.value() )
+        else
+          values.push component.value()
       return values
 
     disabled : ( param ) ->
       results = {}
-      for component in @
+      for component in this
         if param then component.disabled( param )
         results[component.id] = component.disabled()
       return results
 
     required : ( param ) ->
       results = {}
-      for component in @
+      for component in this
         if param then component.required( param )
         results[component.id] = component.required()
       return results
 
     on : ( eventType, handler ) ->
-      handler = handler.bind @
-      for component in @
+      handler = handler.bind( this )
+      for component in this
         component.on( eventType, handler )
       return this
 
     off : ( handler ) ->
       # if ( index = this.listeners.indexOf( handler ) ) > -1
       #   this.listeners.splice index, 1
-      for component in @
+      for component in this
         component.off( arguments )
       return this
 
     trigger : ( eventType, handler ) ->
-      handler = handler.bind @
-      for component in @
+      handler = handler.bind( this )
+      for component in this
         component.trigger( arguments )
       return this
 
     getComponentById : ( id ) ->
-      for component in @
-        return component if component.id
+      for component in this
+        return component if component.id is id
       return false
 
+    _addListener : ( eventType, listener ) ->
+      unless this.listeners[eventType]
+        this.listeners[eventType] = []
+      this.listeners[eventType].push( listener )
 
 
 
@@ -198,7 +206,7 @@
       else if elParam instanceof Node and not ( elParam.tagName in tagNames )
         els = []
         each tagNames, ( name ) ->
-          els = els.concat elParam.getElementsByTagName name
+          els = els.concat slice elParam.getElementsByTagName name
           return
         factoryInner els
         return
@@ -230,7 +238,7 @@
         else
           return e
 
-    return new ControlCollection components, buildOptions
+    return new ControlCollection( components, buildOptions )
 
   controlFactory.identifyingAttribute = "id"
   controlFactory.version = "0.2.0"

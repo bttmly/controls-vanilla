@@ -29,7 +29,7 @@
       }
 
       BaseControl.prototype.required = function(param) {
-        if (param) {
+        if (param != null) {
           this.el.required = !!param;
           return this;
         } else {
@@ -38,7 +38,7 @@
       };
 
       BaseControl.prototype.disabled = function(param) {
-        if (param) {
+        if (param != null) {
           this.el.disabled = !!param;
           return this;
         } else {
@@ -47,7 +47,7 @@
       };
 
       BaseControl.prototype.value = function(param) {
-        if (param) {
+        if (param != null) {
           this.el.value = param;
           return this;
         } else if (this.valid()) {
@@ -153,6 +153,7 @@
           this.push(component);
         }
         this.id = options.id;
+        this.listners = {};
       }
 
       ControlCollection.prototype.value = function() {
@@ -171,12 +172,16 @@
         return values;
       };
 
-      ControlCollection.prototype.valueArray = function() {
+      ControlCollection.prototype.valueArray = function(deep) {
         var component, values, _i, _len;
         values = [];
         for (_i = 0, _len = this.length; _i < _len; _i++) {
           component = this[_i];
-          values.push(component.value());
+          if (deep) {
+            values.push(component.valueArray() || component.value());
+          } else {
+            values.push(component.value());
+          }
         }
         return values;
       };
@@ -240,11 +245,18 @@
         var component, _i, _len;
         for (_i = 0, _len = this.length; _i < _len; _i++) {
           component = this[_i];
-          if (component.id) {
+          if (component.id === id) {
             return component;
           }
         }
         return false;
+      };
+
+      ControlCollection.prototype._addListener = function(eventType, listener) {
+        if (!this.listeners[eventType]) {
+          this.listeners[eventType] = [];
+        }
+        return this.listeners[eventType].push(listener);
       };
 
       return ControlCollection;
@@ -280,7 +292,7 @@
         } else if (elParam instanceof Node && !(_ref = elParam.tagName, __indexOf.call(tagNames, _ref) >= 0)) {
           els = [];
           each(tagNames, function(name) {
-            els = els.concat(elParam.getElementsByTagName(name));
+            els = els.concat(slice(elParam.getElementsByTagName(name)));
           });
           factoryInner(els);
           return;

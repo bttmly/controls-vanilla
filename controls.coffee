@@ -95,7 +95,7 @@
 
     selected : ->
       filter this.el.querySelectorAll( "option" ), ( opt ) ->
-        return opt.selected and not opt.disabled
+        return opt.selected and opt.value and not opt.disabled
 
   class ButtonControl extends BaseControl
     constructor : ( el ) ->

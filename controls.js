@@ -126,7 +126,7 @@
 
       SelectControl.prototype.selected = function() {
         return filter(this.el.querySelectorAll("option"), function(opt) {
-          return opt.selected && !opt.disabled;
+          return opt.selected && opt.value && !opt.disabled;
         });
       };
 

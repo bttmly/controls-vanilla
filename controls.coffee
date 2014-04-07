@@ -1,5 +1,5 @@
 # Controls.coffee
-# v0.1.0
+# v0.2.0
 # Nick Bottomley, 2014
 # MIT License
 
@@ -233,6 +233,7 @@
     return new ControlCollection components, buildOptions
 
   controlFactory.identifyingAttribute = "id"
+  controlFactory.version = "0.2.0"
 
   return controlFactory
 

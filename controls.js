@@ -313,6 +313,7 @@
       return new ControlCollection(components, buildOptions);
     };
     controlFactory.identifyingAttribute = "id";
+    controlFactory.version = "0.2.0";
     return controlFactory;
   });
 

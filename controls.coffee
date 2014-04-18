@@ -9,7 +9,7 @@
       "exports"
     ], ( exports ) ->
       root.Controls = factory( root, exports )
-      return  
+      return
 
   else if typeof exports isnt "undefined"
     factory( root, exports )
@@ -23,9 +23,9 @@
 
   qs = document.querySelector.bind( document )
   qsa = document.querySelectorAll.bind( document )
-  each = Function.prototype.call.bind( Array.prototype.forEach )
-  slice = Function.prototype.call.bind( Array.prototype.slice )
-  filter = Function.prototype.call.bind( Array.prototype.filter )
+  each = [].forEach.call.bind( [].forEach )
+  slice = [].slice.call.bind( [].slice )
+  filter = [].filter.call.bind( [].filter )
     
   class BaseControl
     constructor: ( el ) ->
@@ -34,21 +34,21 @@
       @listeners = []
 
     required : ( param ) ->
-      if arguments.length
+      if param
         @el.required = !!param
         return @
       else
         return @el.required
 
     disabled : ( param ) ->
-      if arguments.length
+      if param
         @el.disabled = !!param
         return @
       else
         return @el.disabled
 
     value : ( param ) ->
-      if arguments.length
+      if param
         @el.value = param
         return @
       else if @valid()
@@ -73,20 +73,14 @@
       return @
 
   class CheckableControl extends BaseControl
-    constructor : ( el ) ->
-      super( el )
-
     value : ( param ) ->
       if param
         @el.value = param
-        return this
-      else 
+        @
+      else
         return if @el.checked then @el.value else false
 
   class SelectControl extends BaseControl
-    constructor : ( el ) ->
-      super( el ) 
-
     value : ->
       results = []
       for option in this.selected()
@@ -98,12 +92,6 @@
         return opt.selected and opt.value and not opt.disabled
 
   class ButtonControl extends BaseControl
-    constructor : ( el ) ->
-      super( el )
-
-
-
-
 
   class ControlCollection extends Array
     constructor: ( components, options ) ->
@@ -120,14 +108,14 @@
           val: val
       return values
 
-    valueArray : ( deep ) ->
-      values = []
-      for component in this
-        if deep 
-          values.push( component.valueArray() or component.value() )
-        else
-          values.push component.value()
-      return values
+    # valueArray : ( deep ) ->
+    #   values = []
+    #   for component in this
+    #     if deep
+    #       values.push( component.valueArray() or component.value() )
+    #     else
+    #       values.push component.value()
+    #   return values
 
     disabled : ( param ) ->
       results = {}
@@ -149,9 +137,7 @@
         component.on( eventType, handler )
       return this
 
-    off : ( handler ) ->
-      # if ( index = this.listeners.indexOf( handler ) ) > -1
-      #   this.listeners.splice index, 1
+    off : ->
       for component in this
         component.off( arguments )
       return this
@@ -167,12 +153,16 @@
         return component if component.id is id
       return false
 
+    filter : ->
+      return controlFactory super
+
     _addListener : ( eventType, listener ) ->
       unless this.listeners[eventType]
         this.listeners[eventType] = []
       this.listeners[eventType].push( listener )
 
-
+  for evt in ["blur", "focus", "click", "dblclick", "keydown", "keypress", "keyup", "change", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "resize", "scroll", "select", "submit"]
+    do ( evt = evt ) ->
 
   buildControlObject = ( el ) ->
     switch el.tagName
@@ -195,13 +185,13 @@
 
     factoryInner = ( elParam ) ->
 
-      if elParam instanceof ControlCollection
+      if elParam instanceof ControlCollection or elParam instanceof BaseControl
         components.push elParam
         return
 
       else if typeof elParam is "string"
         factoryInner qsa elParam
-        return 
+        return
 
       else if elParam instanceof Node and not ( elParam.tagName in tagNames )
         els = []
@@ -242,6 +232,12 @@
 
   controlFactory.identifyingAttribute = "id"
   controlFactory.version = "0.2.0"
+
+  controlFactory.BaseControl = BaseControl
+  controlFactory.SelectControl = SelectControl
+  controlFactory.ButtonControl = ButtonControl
+  controlFactory.CheckableControl = CheckableControl
+  controlFactory.ControlCollection = ControlCollection
 
   return controlFactory
 

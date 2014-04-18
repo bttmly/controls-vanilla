@@ -286,64 +286,64 @@
         return "[" + str + "]";
       };
 
-      var builderOpts = {
-        parent: ".control-wrapper.inserted-controls",
-        els: [
-          {
-            tagName: "input",
-            id: "inserted-input-1",
-            classList: ["class1", "class2", "class3"],
-            name: "radio2",
-            attrs: [
-              {
-                name: "required",
-                value: true
-              }, {
-                name: "type",
-                value: "radio"
-              }, {
-                name: "value",
-                value: "regular"
-              }
-            ]
-          }, {
-            tagName: "label",
-            textContent: "Regular",
-            attrs: [
-              {
-                name: "for",
-                value: "inserted-input-1"
-              }
-            ]
-          }, {
-            tagName: "input",
-            id: "inserted-input-2",
-            classList: ["class1", "class2", "class3"],
-            name: "radio2",
-            attrs: [
-              {
-                name: "required",
-                value: true
-              }, {
-                name: "type",
-                value: "radio"
-              }, {
-                name: "value",
-                value: "cask"
-              }
-            ]
-          }, {
-            tagName: "label",
-            textContent: "Cask strength",
-            attrs: [
-              {
-                name: "for",
-                value: "inserted-input-2"
-              }
-            ]
-          }
-        ]
-      };
+      // var builderOpts = {
+      //   parent: ".control-wrapper.inserted-controls",
+      //   els: [
+      //     {
+      //       tagName: "input",
+      //       id: "inserted-input-1",
+      //       classList: ["class1", "class2", "class3"],
+      //       name: "radio2",
+      //       attrs: [
+      //         {
+      //           name: "required",
+      //           value: true
+      //         }, {
+      //           name: "type",
+      //           value: "radio"
+      //         }, {
+      //           name: "value",
+      //           value: "regular"
+      //         }
+      //       ]
+      //     }, {
+      //       tagName: "label",
+      //       textContent: "Regular",
+      //       attrs: [
+      //         {
+      //           name: "for",
+      //           value: "inserted-input-1"
+      //         }
+      //       ]
+      //     }, {
+      //       tagName: "input",
+      //       id: "inserted-input-2",
+      //       classList: ["class1", "class2", "class3"],
+      //       name: "radio2",
+      //       attrs: [
+      //         {
+      //           name: "required",
+      //           value: true
+      //         }, {
+      //           name: "type",
+      //           value: "radio"
+      //         }, {
+      //           name: "value",
+      //           value: "cask"
+      //         }
+      //       ]
+      //     }, {
+      //       tagName: "label",
+      //       textContent: "Cask strength",
+      //       attrs: [
+      //         {
+      //           name: "for",
+      //           value: "inserted-input-2"
+      //         }
+      //       ]
+      //     }
+      //   ]
+      // };
 
       var Log = {};
       Log.el = document.querySelector( "#console-output" );

@@ -15,12 +15,12 @@
       root.Controls = factory(root, {});
     }
   })(this, function(root, Controls) {
-    var BaseControl, ButtonControl, CheckableControl, ControlCollection, SelectControl, buildControlObject, controlFactory, each, filter, qs, qsa, slice;
+    var BaseControl, ButtonControl, CheckableControl, ControlCollection, SelectControl, buildControlObject, controlFactory, each, evt, filter, qs, qsa, slice, _fn, _i, _len, _ref;
     qs = document.querySelector.bind(document);
     qsa = document.querySelectorAll.bind(document);
-    each = Function.prototype.call.bind(Array.prototype.forEach);
-    slice = Function.prototype.call.bind(Array.prototype.slice);
-    filter = Function.prototype.call.bind(Array.prototype.filter);
+    each = [].forEach.call.bind([].forEach);
+    slice = [].slice.call.bind([].slice);
+    filter = [].filter.call.bind([].filter);
     BaseControl = (function() {
       function BaseControl(el) {
         this.el = el;
@@ -29,7 +29,7 @@
       }
 
       BaseControl.prototype.required = function(param) {
-        if (arguments.length) {
+        if (param) {
           this.el.required = !!param;
           return this;
         } else {
@@ -38,7 +38,7 @@
       };
 
       BaseControl.prototype.disabled = function(param) {
-        if (arguments.length) {
+        if (param) {
           this.el.disabled = !!param;
           return this;
         } else {
@@ -47,7 +47,7 @@
       };
 
       BaseControl.prototype.value = function(param) {
-        if (arguments.length) {
+        if (param) {
           this.el.value = param;
           return this;
         } else if (this.valid()) {
@@ -84,8 +84,8 @@
     CheckableControl = (function(_super) {
       __extends(CheckableControl, _super);
 
-      function CheckableControl(el) {
-        CheckableControl.__super__.constructor.call(this, el);
+      function CheckableControl() {
+        return CheckableControl.__super__.constructor.apply(this, arguments);
       }
 
       CheckableControl.prototype.value = function(param) {
@@ -107,8 +107,8 @@
     SelectControl = (function(_super) {
       __extends(SelectControl, _super);
 
-      function SelectControl(el) {
-        SelectControl.__super__.constructor.call(this, el);
+      function SelectControl() {
+        return SelectControl.__super__.constructor.apply(this, arguments);
       }
 
       SelectControl.prototype.value = function() {
@@ -136,8 +136,8 @@
     ButtonControl = (function(_super) {
       __extends(ButtonControl, _super);
 
-      function ButtonControl(el) {
-        ButtonControl.__super__.constructor.call(this, el);
+      function ButtonControl() {
+        return ButtonControl.__super__.constructor.apply(this, arguments);
       }
 
       return ButtonControl;
@@ -167,20 +167,6 @@
               id: component.id,
               val: val
             });
-          }
-        }
-        return values;
-      };
-
-      ControlCollection.prototype.valueArray = function(deep) {
-        var component, values, _i, _len;
-        values = [];
-        for (_i = 0, _len = this.length; _i < _len; _i++) {
-          component = this[_i];
-          if (deep) {
-            values.push(component.valueArray() || component.value());
-          } else {
-            values.push(component.value());
           }
         }
         return values;
@@ -222,7 +208,7 @@
         return this;
       };
 
-      ControlCollection.prototype.off = function(handler) {
+      ControlCollection.prototype.off = function() {
         var component, _i, _len;
         for (_i = 0, _len = this.length; _i < _len; _i++) {
           component = this[_i];
@@ -252,6 +238,10 @@
         return false;
       };
 
+      ControlCollection.prototype.filter = function() {
+        return controlFactory(ControlCollection.__super__.filter.apply(this, arguments));
+      };
+
       ControlCollection.prototype._addListener = function(eventType, listener) {
         if (!this.listeners[eventType]) {
           this.listeners[eventType] = [];
@@ -262,6 +252,12 @@
       return ControlCollection;
 
     })(Array);
+    _ref = ["blur", "focus", "click", "dblclick", "keydown", "keypress", "keyup", "change", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "resize", "scroll", "select", "submit"];
+    _fn = function(evt) {};
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      evt = _ref[_i];
+      _fn(evt);
+    }
     buildControlObject = function(el) {
       switch (el.tagName) {
         case "INPUT":
@@ -282,14 +278,14 @@
       components = [];
       tagNames = ["INPUT", "SELECT", "BUTTON"];
       factoryInner = function(elParam) {
-        var els, _ref;
-        if (elParam instanceof ControlCollection) {
+        var els, _ref1;
+        if (elParam instanceof ControlCollection || elParam instanceof BaseControl) {
           components.push(elParam);
           return;
         } else if (typeof elParam === "string") {
           factoryInner(qsa(elParam));
           return;
-        } else if (elParam instanceof Node && !(_ref = elParam.tagName, __indexOf.call(tagNames, _ref) >= 0)) {
+        } else if (elParam instanceof Node && !(_ref1 = elParam.tagName, __indexOf.call(tagNames, _ref1) >= 0)) {
           els = [];
           each(tagNames, function(name) {
             els = els.concat(slice(elParam.getElementsByTagName(name)));
@@ -326,6 +322,11 @@
     };
     controlFactory.identifyingAttribute = "id";
     controlFactory.version = "0.2.0";
+    controlFactory.BaseControl = BaseControl;
+    controlFactory.SelectControl = SelectControl;
+    controlFactory.ButtonControl = ButtonControl;
+    controlFactory.CheckableControl = CheckableControl;
+    controlFactory.ControlCollection = ControlCollection;
     return controlFactory;
   });
 

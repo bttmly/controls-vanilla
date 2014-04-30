@@ -15,12 +15,12 @@
       root.Controls = factory(root, {});
     }
   })(this, function(root, Controls) {
-    var BaseControl, ButtonControl, CheckableControl, ControlCollection, SelectControl, buildControlObject, controlFactory, each, evt, filter, qs, qsa, slice, _fn, _i, _len, _ref;
+    var BaseControl, ButtonControl, CheckableControl, ControlCollection, SelectControl, buildControlObject, controlFactory, each, evt, filter, method, qs, qsa, slice, _fn, _fn1, _i, _j, _len, _len1, _ref, _ref1;
     qs = document.querySelector.bind(document);
     qsa = document.querySelectorAll.bind(document);
-    each = [].forEach.call.bind([].forEach);
-    slice = [].slice.call.bind([].slice);
-    filter = [].filter.call.bind([].filter);
+    each = Function.prototype.call.bind(Array.prototype.forEach);
+    slice = Function.prototype.call.bind(Array.prototype.slice);
+    filter = Function.prototype.call.bind(Array.prototype.filter);
     BaseControl = (function() {
       function BaseControl(el) {
         this.el = el;
@@ -252,11 +252,21 @@
       return ControlCollection;
 
     })(Array);
-    _ref = ["blur", "focus", "click", "dblclick", "keydown", "keypress", "keyup", "change", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "resize", "scroll", "select", "submit"];
-    _fn = function(evt) {};
+    _ref = ["filter", "slice", "splice"];
+    _fn = function(method) {
+      return ControlCollection.prototype[method] = function() {
+        return Array.prototype[method].apply(this, arguments);
+      };
+    };
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      evt = _ref[_i];
-      _fn(evt);
+      method = _ref[_i];
+      _fn(method);
+    }
+    _ref1 = ["blur", "focus", "click", "dblclick", "keydown", "keypress", "keyup", "change", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "resize", "scroll", "select", "submit"];
+    _fn1 = function(evt) {};
+    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+      evt = _ref1[_j];
+      _fn1(evt);
     }
     buildControlObject = function(el) {
       switch (el.tagName) {
@@ -278,14 +288,14 @@
       components = [];
       tagNames = ["INPUT", "SELECT", "BUTTON"];
       factoryInner = function(elParam) {
-        var els, _ref1;
+        var els, _ref2;
         if (elParam instanceof ControlCollection || elParam instanceof BaseControl) {
           components.push(elParam);
           return;
         } else if (typeof elParam === "string") {
           factoryInner(qsa(elParam));
           return;
-        } else if (elParam instanceof Node && !(_ref1 = elParam.tagName, __indexOf.call(tagNames, _ref1) >= 0)) {
+        } else if (elParam instanceof Node && !(_ref2 = elParam.tagName, __indexOf.call(tagNames, _ref2) >= 0)) {
           els = [];
           each(tagNames, function(name) {
             els = els.concat(slice(elParam.getElementsByTagName(name)));

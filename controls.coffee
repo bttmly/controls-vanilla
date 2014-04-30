@@ -23,10 +23,11 @@
 
   qs = document.querySelector.bind( document )
   qsa = document.querySelectorAll.bind( document )
-  each = [].forEach.call.bind( [].forEach )
-  slice = [].slice.call.bind( [].slice )
-  filter = [].filter.call.bind( [].filter )
-    
+  each = Function.prototype.call.bind( Array.prototype.forEach )
+  slice = Function.prototype.call.bind( Array.prototype.slice )
+  filter = Function.prototype.call.bind( Array.prototype.filter )
+  
+  # for any input that doesn't match other controls
   class BaseControl
     constructor: ( el ) ->
       @el = el
@@ -72,6 +73,7 @@
       @el.dispatchEvent new CustomEvent eventType
       return @
 
+  # for input[type='checkbox'] and input[type='radio']
   class CheckableControl extends BaseControl
     value : ( param ) ->
       if param
@@ -80,6 +82,8 @@
       else
         return if @el.checked then @el.value else false
 
+
+  # for <select>
   class SelectControl extends BaseControl
     value : ->
       results = []
@@ -91,8 +95,12 @@
       filter this.el.querySelectorAll( "option" ), ( opt ) ->
         return opt.selected and opt.value and not opt.disabled
 
+  # for <button> and input[type='button']
   class ButtonControl extends BaseControl
 
+
+
+  # an array-like object containing Control instances
   class ControlCollection extends Array
     constructor: ( components, options ) ->
       this.push( component ) for component in components
@@ -160,6 +168,13 @@
       unless this.listeners[eventType]
         this.listeners[eventType] = []
       this.listeners[eventType].push( listener )
+
+
+  for method in ["filter", "slice", "splice"]
+    do ( method ) ->
+      ControlCollection::[method] = ->
+        Array.prototype[method].apply( this, arguments )
+
 
   for evt in ["blur", "focus", "click", "dblclick", "keydown", "keypress", "keyup", "change", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "resize", "scroll", "select", "submit"]
     do ( evt = evt ) ->

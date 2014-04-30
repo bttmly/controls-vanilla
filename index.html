@@ -262,7 +262,7 @@
       </div>
 
       <div class="control-wrapper">
-        <button>Control Button</button>
+        <button id="button-control">Control Button</button>
       </div>
 
     </div>
@@ -286,65 +286,6 @@
         return "[" + str + "]";
       };
 
-      // var builderOpts = {
-      //   parent: ".control-wrapper.inserted-controls",
-      //   els: [
-      //     {
-      //       tagName: "input",
-      //       id: "inserted-input-1",
-      //       classList: ["class1", "class2", "class3"],
-      //       name: "radio2",
-      //       attrs: [
-      //         {
-      //           name: "required",
-      //           value: true
-      //         }, {
-      //           name: "type",
-      //           value: "radio"
-      //         }, {
-      //           name: "value",
-      //           value: "regular"
-      //         }
-      //       ]
-      //     }, {
-      //       tagName: "label",
-      //       textContent: "Regular",
-      //       attrs: [
-      //         {
-      //           name: "for",
-      //           value: "inserted-input-1"
-      //         }
-      //       ]
-      //     }, {
-      //       tagName: "input",
-      //       id: "inserted-input-2",
-      //       classList: ["class1", "class2", "class3"],
-      //       name: "radio2",
-      //       attrs: [
-      //         {
-      //           name: "required",
-      //           value: true
-      //         }, {
-      //           name: "type",
-      //           value: "radio"
-      //         }, {
-      //           name: "value",
-      //           value: "cask"
-      //         }
-      //       ]
-      //     }, {
-      //       tagName: "label",
-      //       textContent: "Cask strength",
-      //       attrs: [
-      //         {
-      //           name: "for",
-      //           value: "inserted-input-2"
-      //         }
-      //       ]
-      //     }
-      //   ]
-      // };
-
       var Log = {};
       Log.el = document.querySelector( "#console-output" );
       Log.erase = function() { 
@@ -362,20 +303,6 @@
       clearButton.addEventListener( "click", function( event ) {
         Log.erase();
       });
-
-      // window.testInputs = Object.create( null )
-      // testInputs.input1 = $$( "#input1" );
-      // testInputs.checkboxes = $$( "#checkbox-wrapper" );
-      // testInputs.radios = $$( "#radio-wrapper" );
-      // testInputs.singleSelect = $$( "#single-select-wrapper" );
-      // testInputs.multiSelect = $$( "#multi-select-wrapper" );
-      // testInputs.hashGroup = $$( "#text-fields-wrapper" );
-
-      // testInputArray = []
-
-      // for ( input in testInputs ) {
-      //   testInputArray.push( testInputs[input] );
-      // }
 
       window.masterCollection = $$( "#controls" )
       masterCollection.on( "change", function( event ) {

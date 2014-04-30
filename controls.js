@@ -15,12 +15,23 @@
       root.Controls = factory(root, {});
     }
   })(this, function(root, Controls) {
-    var BaseControl, ButtonControl, CheckableControl, ControlCollection, SelectControl, buildControlObject, controlFactory, each, evt, filter, method, qs, qsa, slice, _fn, _fn1, _i, _j, _len, _len1, _ref, _ref1;
+    var BaseControl, ButtonControl, CheckableControl, ControlCollection, SelectControl, buildControlObject, controlFactory, each, filter, qs, qsa, querySelectorAll, slice;
     qs = document.querySelector.bind(document);
     qsa = document.querySelectorAll.bind(document);
     each = Function.prototype.call.bind(Array.prototype.forEach);
     slice = Function.prototype.call.bind(Array.prototype.slice);
     filter = Function.prototype.call.bind(Array.prototype.filter);
+    querySelectorAll = function() {
+      var el, selector;
+      if (arguments[0] instanceof Node) {
+        el = arguments[0];
+        selector = arguments[1];
+      } else {
+        el = document;
+        selector = arguments[0];
+      }
+      return Array.prototype.slice.call(el.querySelectorAll(selector));
+    };
     BaseControl = (function() {
       function BaseControl(el) {
         this.el = el;
@@ -29,7 +40,7 @@
       }
 
       BaseControl.prototype.required = function(param) {
-        if (param) {
+        if (param != null) {
           this.el.required = !!param;
           return this;
         } else {
@@ -38,7 +49,7 @@
       };
 
       BaseControl.prototype.disabled = function(param) {
-        if (param) {
+        if (param != null) {
           this.el.disabled = !!param;
           return this;
         } else {
@@ -47,7 +58,7 @@
       };
 
       BaseControl.prototype.value = function(param) {
-        if (param) {
+        if (param != null) {
           this.el.value = param;
           return this;
         } else if (this.valid()) {
@@ -227,19 +238,59 @@
         return this;
       };
 
-      ControlCollection.prototype.getComponentById = function(id) {
-        var component, _i, _len;
+      ControlCollection.prototype.where = function(obj) {
+        var component, key, match, ret, val, _i, _len, _results;
+        ret = [];
+        _results = [];
         for (_i = 0, _len = this.length; _i < _len; _i++) {
           component = this[_i];
-          if (component.id === id) {
+          match = true;
+          for (key in obj) {
+            val = obj[key];
+            if (component[key] !== val) {
+              match = false;
+            }
+          }
+          if (match === true) {
+            _results.push(ret.push(component));
+          } else {
+            _results.push(void 0);
+          }
+        }
+        return _results;
+      };
+
+      ControlCollection.prototype.find = function(obj) {
+        var component, key, match, val, _i, _len;
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          component = this[_i];
+          match = true;
+          for (key in obj) {
+            val = obj[key];
+            if (component[key] !== val) {
+              match = false;
+            }
+          }
+          if (match === true) {
             return component;
           }
         }
-        return false;
       };
 
-      ControlCollection.prototype.filter = function() {
-        return controlFactory(ControlCollection.__super__.filter.apply(this, arguments));
+      ControlCollection.prototype.byId = function(id) {
+        return this.find({
+          id: id
+        });
+      };
+
+      ControlCollection.prototype.toFormData = function() {
+        var control, formData, _i, _len;
+        formData = new FormData();
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          control = this[_i];
+          formData.append(control.id, control.value());
+        }
+        return formData;
       };
 
       ControlCollection.prototype._addListener = function(eventType, listener) {
@@ -252,34 +303,18 @@
       return ControlCollection;
 
     })(Array);
-    _ref = ["filter", "slice", "splice"];
-    _fn = function(method) {
-      return ControlCollection.prototype[method] = function() {
-        return Array.prototype[method].apply(this, arguments);
-      };
-    };
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      method = _ref[_i];
-      _fn(method);
-    }
-    _ref1 = ["blur", "focus", "click", "dblclick", "keydown", "keypress", "keyup", "change", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "resize", "scroll", "select", "submit"];
-    _fn1 = function(evt) {};
-    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-      evt = _ref1[_j];
-      _fn1(evt);
-    }
     buildControlObject = function(el) {
-      switch (el.tagName) {
-        case "INPUT":
+      switch (el.tagName.toLowerCase()) {
+        case "input" || "textarea":
           if (el.type === "radio" || el.type === "checkbox") {
             return new CheckableControl(el);
           } else {
             return new BaseControl(el);
           }
           break;
-        case "SELECT":
+        case "select":
           return new SelectControl(el);
-        case "BUTTON":
+        case "button":
           return new ButtonControl(el);
       }
     };
@@ -288,14 +323,14 @@
       components = [];
       tagNames = ["INPUT", "SELECT", "BUTTON"];
       factoryInner = function(elParam) {
-        var els, _ref2;
+        var els, _ref;
         if (elParam instanceof ControlCollection || elParam instanceof BaseControl) {
           components.push(elParam);
           return;
         } else if (typeof elParam === "string") {
           factoryInner(qsa(elParam));
           return;
-        } else if (elParam instanceof Node && !(_ref2 = elParam.tagName, __indexOf.call(tagNames, _ref2) >= 0)) {
+        } else if (elParam instanceof Node && !(_ref = elParam.tagName, __indexOf.call(tagNames, _ref) >= 0)) {
           els = [];
           each(tagNames, function(name) {
             els = els.concat(slice(elParam.getElementsByTagName(name)));
@@ -328,6 +363,7 @@
           }
         }
       })();
+      console.log(components);
       return new ControlCollection(components, buildOptions);
     };
     controlFactory.identifyingAttribute = "id";

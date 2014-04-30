@@ -23,10 +23,22 @@
 
   qs = document.querySelector.bind( document )
   qsa = document.querySelectorAll.bind( document )
+
   each = Function.prototype.call.bind( Array.prototype.forEach )
   slice = Function.prototype.call.bind( Array.prototype.slice )
   filter = Function.prototype.call.bind( Array.prototype.filter )
-  
+
+  # returns an true array of DOM nodes.
+  querySelectorAll = ->
+    if arguments[0] instanceof Node
+      el = arguments[0]
+      selector = arguments[1]
+    else
+      el = document
+      selector = arguments[0]
+    Array.prototype.slice.call el.querySelectorAll selector
+
+
   # for any input that doesn't match other controls
   class BaseControl
     constructor: ( el ) ->
@@ -35,21 +47,21 @@
       @listeners = []
 
     required : ( param ) ->
-      if param
+      if param?
         @el.required = !!param
         return @
       else
         return @el.required
 
     disabled : ( param ) ->
-      if param
+      if param?
         @el.disabled = !!param
         return @
       else
         return @el.disabled
 
     value : ( param ) ->
-      if param
+      if param?
         @el.value = param
         return @
       else if @valid()
@@ -116,15 +128,6 @@
           val: val
       return values
 
-    # valueArray : ( deep ) ->
-    #   values = []
-    #   for component in this
-    #     if deep
-    #       values.push( component.valueArray() or component.value() )
-    #     else
-    #       values.push component.value()
-    #   return values
-
     disabled : ( param ) ->
       results = {}
       for component in this
@@ -140,58 +143,82 @@
       return results
 
     on : ( eventType, handler ) ->
-      handler = handler.bind( this )
-      for component in this
+      handler = handler.bind( @ )
+      for component in @
         component.on( eventType, handler )
-      return this
+      @
 
     off : ->
-      for component in this
+      for component in @
         component.off( arguments )
-      return this
+      @
 
     trigger : ( eventType, handler ) ->
-      handler = handler.bind( this )
-      for component in this
+      handler = handler.bind( @ )
+      for component in @
         component.trigger( arguments )
-      return this
+      @
 
-    getComponentById : ( id ) ->
-      for component in this
-        return component if component.id is id
-      return false
+    where : ( obj ) ->
+      ret = []
+      for component in @
+        match = true
+        for key, val of obj
+          match = false if component[key] isnt val
+        ret.push component if match is true
 
-    filter : ->
-      return controlFactory super
+    find : ( obj ) ->
+      for component in @
+        match = true
+        for key, val of obj
+          match = false if component[key] isnt val
+        return component if match is true
+
+    byId : ( id ) ->
+      @find( id: id )
+
+    toFormData : ->
+      formData = new FormData()
+      for control in @
+        formData.append control.id, control.value()
+      return formData
+
+
+
+
+    # filter : ->
+    #   return controlFactory super
 
     _addListener : ( eventType, listener ) ->
-      unless this.listeners[eventType]
-        this.listeners[eventType] = []
-      this.listeners[eventType].push( listener )
+      unless @listeners[eventType]
+        @listeners[eventType] = []
+      @listeners[eventType].push listener
 
 
-  for method in ["filter", "slice", "splice"]
-    do ( method ) ->
-      ControlCollection::[method] = ->
-        Array.prototype[method].apply( this, arguments )
+  # for method in ["filter", "slice", "splice"]
+  #   do ( method ) ->
+  #     ControlCollection::[method] = ->
+  #       Array.prototype[method].apply( this, arguments )
 
 
-  for evt in ["blur", "focus", "click", "dblclick", "keydown", "keypress", "keyup", "change", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "resize", "scroll", "select", "submit"]
-    do ( evt = evt ) ->
+  # for evt in ["blur", "focus", "click", "dblclick", "keydown", "keypress", "keyup", "change", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover", "mouseup", "resize", "scroll", "select", "submit"]
+  #   do ( evt ) ->
 
   buildControlObject = ( el ) ->
-    switch el.tagName
-      when "INPUT"
+    switch el.tagName.toLowerCase()
+      when "input" or "textarea"
         if el.type is "radio" or el.type is "checkbox"
           return new CheckableControl el
         else
           return new BaseControl el
-      when "SELECT"
+      when "select"
         return new SelectControl el
-      when "BUTTON"
+      when "button"
         return new ButtonControl el
       else
         return
+
+
 
   controlFactory = ( e, options ) ->
 
@@ -242,6 +269,8 @@
           return e.substr 1
         else
           return e
+
+    console.log components
 
     return new ControlCollection( components, buildOptions )
 

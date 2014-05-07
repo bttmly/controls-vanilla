@@ -46,9 +46,12 @@
     select {
       -webkit-appearance: none;
       border: 1px solid slategray;
-      box-shadow: 0 0 0 .5em transparent;
+      outline: 8px solid transparent;
+      -webkit-transition: outline .25s ease-in-out;
+      transition: outline .25s ease-in-out;*/      
+/*      box-shadow: 0 0 0 .5em transparent;
       -webkit-transition: box-shadow .25s ease-in-out;
-      transition: box-shadow .25s ease-in-out;
+      transition: box-shadow .25s ease-in-out;*/
     }
     input[type="text"]:focus,
     input[type="radio"]:focus,
@@ -56,8 +59,8 @@
     input[type="button"]:focus,
     button:focus,
     select:focus {
-      outline: none;
-      box-shadow: 0 0 0 2px slategray;
+      outline: 3px solid slategray;
+      /*box-shadow: 0 0 0 2px slategray;*/
     }
 
     input[type="text"],
@@ -139,8 +142,8 @@
       cursor: pointer;
     }
 
-    button {
-      margin: 1em 0;
+    input[disabled], button[disabled], select[disabled], label.disabled-label {
+      opacity: .5;
     }
 
     input[type='text'] {
@@ -185,6 +188,7 @@
       top: 2em;
       right: 3em;
       background: #333;
+      margin: 1rem 0;
     }
     #clear-console-button:focus {
       outline: 2px solid springgreen;
@@ -306,38 +310,10 @@
 
       window.masterCollection = $$( "#controls" )
       masterCollection.on( "change", function( event ) {
-        Log.print( JSON.stringify( this.value() ) );
+        Log.print( JSON.stringify( this.value() ).replace(",", ",\n") );
       });
 
-      // testInputs.dynamicCollection = Builder( builderOpts );
-
-      // testInputs.input1.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
-
-      // testInputs.checkboxes.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
-
-      // testInputs.radios.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
-
-      // testInputs.singleSelect.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
-
-      // testInputs.multiSelect.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
-
-      // testInputs.hashGroup.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
-
-      // testInputs.dynamicCollection.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
+      
 
     }).call( this );
 

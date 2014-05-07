@@ -137,13 +137,18 @@ module.exports = CheckableControl;
 
 
 },{"./base-control.coffee":1}],4:[function(require,module,exports){
-var ControlCollection, extend, util,
+var ControlCollection, each, extend, isEmpty, util,
   __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 util = require("./utilities.coffee");
 
 extend = util.extend;
+
+isEmpty = util.isEmpty;
+
+each = util.each;
 
 ControlCollection = (function(_super) {
   __extends(ControlCollection, _super);
@@ -176,6 +181,9 @@ ControlCollection = (function(_super) {
     }
     settings = extend({}, ControlCollection.defaults(), options);
     this.id = settings.id;
+    if (settings.valid) {
+      this.valid = settings.valid;
+    }
   }
 
   ControlCollection.prototype.value = function() {
@@ -233,6 +241,29 @@ ControlCollection = (function(_super) {
     return results;
   };
 
+  ControlCollection.prototype.valid = function() {
+    var checkedInSubCollection, collectionsValid, control, singlesValid, _i, _len;
+    checkedInSubCollection = [];
+    collectionsValid = true;
+    each(this.collections, function(collection) {
+      checkedInSubCollection.push.apply(checkedInSubCollection, collection);
+      if (!collection.valid()) {
+        return collectionsValid = false;
+      }
+    });
+    singlesValid = true;
+    for (_i = 0, _len = this.length; _i < _len; _i++) {
+      control = this[_i];
+      if (__indexOf.call(checkedInSubCollection, control) >= 0) {
+        continue;
+      }
+      if (!control.valid()) {
+        singlesValid = false;
+      }
+    }
+    return collectionsValid && singlesValid;
+  };
+
   ControlCollection.prototype.on = function(eventType, handler) {
     var component, _i, _len;
     handler = handler.bind(this);
@@ -252,12 +283,11 @@ ControlCollection = (function(_super) {
     return this;
   };
 
-  ControlCollection.prototype.trigger = function(eventType, handler) {
+  ControlCollection.prototype.trigger = function(eventType) {
     var component, _i, _len;
-    handler = handler.bind(this);
     for (_i = 0, _len = this.length; _i < _len; _i++) {
       component = this[_i];
-      component.trigger(arguments);
+      component.trigger(eventType);
     }
     return this;
   };
@@ -325,7 +355,7 @@ module.exports = ControlCollection;
 
 
 },{"./factory.coffee":6}],6:[function(require,module,exports){
-var BaseControl, ButtonControl, CheckableControl, ControlCollection, Factory, SelectControl, buildControl, controlTags, defaults, extend, processSelector, qsa, _ref,
+var BaseControl, ButtonControl, CheckableControl, ControlCollection, Factory, SelectControl, buildControl, controlTags, extend, processSelector, qsa, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 BaseControl = require("./base-control.coffee");
@@ -341,8 +371,6 @@ ControlCollection = require("./control-collection.coffee");
 _ref = require("./utilities.coffee"), qsa = _ref.qsa, extend = _ref.extend, processSelector = _ref.processSelector;
 
 controlTags = ["input", "select", "button", "textarea"];
-
-defaults = {};
 
 buildControl = function(el) {
   switch (el.tagName.toLowerCase()) {
@@ -363,15 +391,13 @@ buildControl = function(el) {
 };
 
 Factory = function(element, options) {
-  var components, controls, el, settings, _ref1;
+  var components, controls, el, _ref1;
   if (options == null) {
     options = {};
   }
   components = [];
-  settings = {};
   if (typeof element === "string") {
-    settings.id = processSelector(element);
-    console.log(settings.id);
+    options.id = processSelector(element);
     el = document.querySelector(element);
     if (_ref1 = el.tagName.toLowerCase(), __indexOf.call(controlTags, _ref1) >= 0) {
       components.push(el);
@@ -393,7 +419,7 @@ Factory = function(element, options) {
       return item;
     }
   });
-  return new ControlCollection(controls, settings);
+  return new ControlCollection(controls, options);
 };
 
 Factory.BaseControl = BaseControl;
@@ -441,9 +467,13 @@ SelectControl = (function(_super) {
   };
 
   SelectControl.prototype.selected = function() {
-    return filter(this.el.querySelectorAll("option"), function(opt) {
-      return opt.selected && opt.value && !opt.disabled;
+    return filter(this.el.children, function(opt) {
+      return opt.tagName.toLowerCase() === "option" && opt.selected && opt.value && !opt.disabled;
     });
+  };
+
+  SelectControl.prototype.valid = function() {
+    return !!this.value().length;
   };
 
   return SelectControl;
@@ -506,6 +536,26 @@ utilities = {
   },
   processSelector: function(str) {
     return utilities.camelize(str).replace(/\W/g, "");
+  },
+  each: function(obj, itr) {
+    var i, list, _results;
+    list = Array.isArray(obj) ? obj.map(function(e, i) {
+      return i;
+    }) : Object.keys(obj);
+    i = 0;
+    _results = [];
+    while (i < list.length) {
+      itr(obj[list[i]], list[i], obj);
+      _results.push(i += 1);
+    }
+    return _results;
+  },
+  isEmpty: function(obj) {
+    if (Array.isArray(obj)) {
+      return !!obj.length;
+    } else {
+      return !!Object.keys(obj).length;
+    }
   }
 };
 

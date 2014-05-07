@@ -32,4 +32,14 @@ utilities =
   processSelector : ( str ) ->
     utilities.camelize( str ).replace( /\W/g, "" )
 
+  each : ( obj, itr ) ->
+    list = if Array.isArray( obj ) then obj.map (e, i) ->  i else Object.keys( obj )
+    i = 0
+    while i < list.length
+      itr( obj[list[i]], list[ i ], obj )
+      i += 1
+
+  isEmpty : ( obj ) ->
+    return if Array.isArray( obj ) then !!obj.length else !!Object.keys( obj ).length
+
 module.exports = utilities

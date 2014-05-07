@@ -1,7 +1,10 @@
 util = require "./utilities.coffee"
 extend = util.extend
+isEmpty = util.isEmpty
+each = util.each
 
 class ControlCollection extends Array
+
 
   @defaults : do ->
     counter = 0
@@ -9,6 +12,7 @@ class ControlCollection extends Array
       id : do ->
         counter += 1
         return "controlCollection#{ counter }"
+
 
   constructor: ( components, options ) ->
     controls = []
@@ -22,6 +26,8 @@ class ControlCollection extends Array
 
     settings = extend( {}, ControlCollection.defaults(), options )
     @id = settings.id
+    @valid = settings.valid if settings.valid
+
 
   value : ->
     values = {}
@@ -30,6 +36,7 @@ class ControlCollection extends Array
       if val and val.length
         values[ component.id ] = val
     values
+
 
   valueAsArray : ->
     values = []
@@ -40,12 +47,14 @@ class ControlCollection extends Array
         val: val
     values
 
+
   disabled : ( param ) ->
     results = {}
     for component in @
       if param? then component.disabled( param )
       results[component.id] = component.disabled()
     return results
+
 
   required : ( param ) ->
     results = {}
@@ -54,22 +63,40 @@ class ControlCollection extends Array
       results[component.id] = component.required()
     return results
 
+
+  valid : ->
+    checkedInSubCollection = []
+    collectionsValid = true
+    each @collections, ( collection ) ->
+      checkedInSubCollection.push.apply( checkedInSubCollection, collection )
+      collectionsValid = false unless collection.valid()
+
+    singlesValid = true
+    for control in @
+      continue if control in checkedInSubCollection
+      singlesValid = false unless control.valid()
+
+    return collectionsValid and singlesValid
+
+
   on : ( eventType, handler ) ->
     handler = handler.bind( @ )
     for component in @
       component.on( eventType, handler )
     @
 
+
   off : ->
     for component in @
       component.off( arguments )
     @
 
-  trigger : ( eventType, handler ) ->
-    handler = handler.bind( @ )
+
+  trigger : ( eventType ) ->
     for component in @
-      component.trigger( arguments )
+      component.trigger( eventType )
     @
+
 
   where : ( obj ) ->
     ret = []
@@ -79,6 +106,7 @@ class ControlCollection extends Array
         match = false if component[key] isnt val
       ret.push component if match is true
 
+
   find : ( obj ) ->
     for component in @
       match = true
@@ -86,9 +114,9 @@ class ControlCollection extends Array
         match = false if component[key] isnt val
       return component if match is true
 
+
   byId : ( id ) ->
     @find( id: id )
-
 
 
 module.exports = ControlCollection

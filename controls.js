@@ -242,21 +242,12 @@ ControlCollection = (function(_super) {
   };
 
   ControlCollection.prototype.valid = function() {
-    var b, checkedInSubCollection, collectionsValid, control, e, singlesValid, _i, _len;
+    var checkedInSubCollection, collectionsValid, control, singlesValid, _i, _len;
     checkedInSubCollection = [];
     collectionsValid = true;
     each(this.collections, function(collection) {
-      var b, e;
       checkedInSubCollection.push.apply(checkedInSubCollection, collection);
-      try {
-        b = collection.valid();
-      } catch (_error) {
-        e = _error;
-        console.log(e.stack);
-        console.log(collection);
-        throw e;
-      }
-      if (!b) {
+      if (!collection.valid()) {
         return collectionsValid = false;
       }
     });
@@ -266,15 +257,7 @@ ControlCollection = (function(_super) {
       if (__indexOf.call(checkedInSubCollection, control) >= 0) {
         continue;
       }
-      try {
-        b = control.valid();
-      } catch (_error) {
-        e = _error;
-        console.log(e.stack);
-        console.log(control);
-        throw e;
-      }
-      if (!b) {
+      if (!control.valid()) {
         singlesValid = false;
       }
     }

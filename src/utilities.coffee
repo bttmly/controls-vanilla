@@ -40,9 +40,6 @@ utilities =
       i += 1
 
   isEmpty : ( obj ) ->
-    if Array.isArray( obj )
-      return !!obj.length
-    else
-      return !!Object.keys( obj ).length
+    return if Array.isArray( obj ) then !!obj.length else !!Object.keys( obj ).length
 
 module.exports = utilities

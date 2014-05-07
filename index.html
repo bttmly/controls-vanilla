@@ -46,9 +46,12 @@
     select {
       -webkit-appearance: none;
       border: 1px solid slategray;
-      box-shadow: 0 0 0 .5em transparent;
+      outline: 8px solid transparent;
+      -webkit-transition: outline .25s ease-in-out;
+      transition: outline .25s ease-in-out;*/      
+/*      box-shadow: 0 0 0 .5em transparent;
       -webkit-transition: box-shadow .25s ease-in-out;
-      transition: box-shadow .25s ease-in-out;
+      transition: box-shadow .25s ease-in-out;*/
     }
     input[type="text"]:focus,
     input[type="radio"]:focus,
@@ -56,8 +59,8 @@
     input[type="button"]:focus,
     button:focus,
     select:focus {
-      outline: none;
-      box-shadow: 0 0 0 2px slategray;
+      outline: 3px solid slategray;
+      /*box-shadow: 0 0 0 2px slategray;*/
     }
 
     input[type="text"],
@@ -139,8 +142,8 @@
       cursor: pointer;
     }
 
-    button {
-      margin: 1em 0;
+    input[disabled], button[disabled], select[disabled], label.disabled-label {
+      opacity: .5;
     }
 
     input[type='text'] {
@@ -185,6 +188,7 @@
       top: 2em;
       right: 3em;
       background: #333;
+      margin: 1rem 0;
     }
     #clear-console-button:focus {
       outline: 2px solid springgreen;
@@ -262,7 +266,7 @@
       </div>
 
       <div class="control-wrapper">
-        <button>Control Button</button>
+        <button id="button-control">Control Button</button>
       </div>
 
     </div>
@@ -286,65 +290,6 @@
         return "[" + str + "]";
       };
 
-      // var builderOpts = {
-      //   parent: ".control-wrapper.inserted-controls",
-      //   els: [
-      //     {
-      //       tagName: "input",
-      //       id: "inserted-input-1",
-      //       classList: ["class1", "class2", "class3"],
-      //       name: "radio2",
-      //       attrs: [
-      //         {
-      //           name: "required",
-      //           value: true
-      //         }, {
-      //           name: "type",
-      //           value: "radio"
-      //         }, {
-      //           name: "value",
-      //           value: "regular"
-      //         }
-      //       ]
-      //     }, {
-      //       tagName: "label",
-      //       textContent: "Regular",
-      //       attrs: [
-      //         {
-      //           name: "for",
-      //           value: "inserted-input-1"
-      //         }
-      //       ]
-      //     }, {
-      //       tagName: "input",
-      //       id: "inserted-input-2",
-      //       classList: ["class1", "class2", "class3"],
-      //       name: "radio2",
-      //       attrs: [
-      //         {
-      //           name: "required",
-      //           value: true
-      //         }, {
-      //           name: "type",
-      //           value: "radio"
-      //         }, {
-      //           name: "value",
-      //           value: "cask"
-      //         }
-      //       ]
-      //     }, {
-      //       tagName: "label",
-      //       textContent: "Cask strength",
-      //       attrs: [
-      //         {
-      //           name: "for",
-      //           value: "inserted-input-2"
-      //         }
-      //       ]
-      //     }
-      //   ]
-      // };
-
       var Log = {};
       Log.el = document.querySelector( "#console-output" );
       Log.erase = function() { 
@@ -363,54 +308,12 @@
         Log.erase();
       });
 
-      // window.testInputs = Object.create( null )
-      // testInputs.input1 = $$( "#input1" );
-      // testInputs.checkboxes = $$( "#checkbox-wrapper" );
-      // testInputs.radios = $$( "#radio-wrapper" );
-      // testInputs.singleSelect = $$( "#single-select-wrapper" );
-      // testInputs.multiSelect = $$( "#multi-select-wrapper" );
-      // testInputs.hashGroup = $$( "#text-fields-wrapper" );
-
-      // testInputArray = []
-
-      // for ( input in testInputs ) {
-      //   testInputArray.push( testInputs[input] );
-      // }
-
       window.masterCollection = $$( "#controls" )
       masterCollection.on( "change", function( event ) {
-        Log.print( JSON.stringify( this.value() ) );
+        Log.print( JSON.stringify( this.value() ).replace(",", ",\n") );
       });
 
-      // testInputs.dynamicCollection = Builder( builderOpts );
-
-      // testInputs.input1.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
-
-      // testInputs.checkboxes.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
-
-      // testInputs.radios.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
-
-      // testInputs.singleSelect.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
-
-      // testInputs.multiSelect.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
-
-      // testInputs.hashGroup.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
-
-      // testInputs.dynamicCollection.on( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ) );
-      // });
+      
 
     }).call( this );
 

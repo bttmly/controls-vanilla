@@ -8,9 +8,7 @@
   ],
   "description": "Manipulate control elements w/ JS",
   "moduleType": [
-    "amd",
     "globals",
-    "node"
   ],
   "keywords": [
     "input",

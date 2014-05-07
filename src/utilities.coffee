@@ -24,4 +24,12 @@ utilities =
   filter : ( arr, cb ) ->
     Array.prototype.filter.call( arr, cb )
 
+  # https://gist.github.com/vjt/827679
+  camelize : ( str ) ->
+    str.replace /(?:^|[-_])(\w)/g, (_, c) ->
+      return if c then c.toUpperCase() else ""
+
+  processSelector : ( str ) ->
+    utilities.camelize( str ).replace( /\W/g, "" )
+
 module.exports = utilities

@@ -284,33 +284,41 @@
   <script>
     (function(){
 
-      var $$ = Controls
-
-      var bracketize = function( str ) {
-        return "[" + str + "]";
-      };
-
       var Log = {};
       Log.el = document.querySelector( "#console-output" );
       Log.erase = function() { 
         this.el.innerHTML = "";
         return this;
-      }
+      };
       Log.print = function( string ) { 
         string = "<pre>" + string + "</pre>";
         this.el.innerHTML += string;
         this.el.scrollTop = this.el.scrollHeight;
         return this; 
-      }
+      };
 
       var clearButton = document.querySelector( "#clear-console-button" );
       clearButton.addEventListener( "click", function( event ) {
         Log.erase();
       });
 
-      window.masterCollection = $$( "#controls" )
+      var checkboxCollection = Controls( "#checkbox-wrapper" );
+      var radioCollection = Controls( "#radio-wrapper" );
+      var textFieldsCollection = Controls( "#text-fields-wrapper" );
+      var singleSelectCollection = Controls( "#single-select-wrapper" );
+      var multiSelectCollection = Controls( "#multi-select-wrapper" );
+
+      var collections = [
+        checkboxCollection
+        radioCollection
+        textFieldsCollection
+        singleSelectCollection
+        multiSelectCollection
+      ]
+
+      window.masterCollection = Controls( collections )
       masterCollection.on( "change", function( event ) {
-        Log.print( JSON.stringify( this.value() ).replace(",", ",\n") );
+        Log.print( JSON.stringify( this.value() ).replace(/,/g, ",\n") );
       });
 
       

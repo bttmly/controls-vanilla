@@ -325,7 +325,7 @@ module.exports = ControlCollection;
 
 
 },{"./factory.coffee":6}],6:[function(require,module,exports){
-var BaseControl, ButtonControl, CheckableControl, ControlCollection, Factory, SelectControl, buildControl, controlTags, defaults, extend, qsa, utilities,
+var BaseControl, ButtonControl, CheckableControl, ControlCollection, Factory, SelectControl, buildControl, controlTags, defaults, extend, processSelector, qsa, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 BaseControl = require("./base-control.coffee");
@@ -338,15 +338,13 @@ CheckableControl = require("./checkable-control.coffee");
 
 ControlCollection = require("./control-collection.coffee");
 
-utilities = require("./utilities.coffee");
-
-qsa = utilities.qsa;
-
-extend = utilities.extend;
+_ref = require("./utilities.coffee"), qsa = _ref.qsa, extend = _ref.extend, processSelector = _ref.processSelector;
 
 controlTags = ["input", "select", "button", "textarea"];
 
-defaults = buildControl = function(el) {
+defaults = {};
+
+buildControl = function(el) {
   switch (el.tagName.toLowerCase()) {
     case "input" || "textarea":
       if (el.type === "radio" || el.type === "checkbox") {
@@ -365,28 +363,36 @@ defaults = buildControl = function(el) {
 };
 
 Factory = function(element, options) {
-  var components, controls, el, settings, _ref;
+  var components, controls, el, settings, _ref1;
   if (options == null) {
     options = {};
   }
-  settings = extend({}, defaults, options);
   components = [];
+  settings = {};
   if (typeof element === "string") {
+    settings.id = processSelector(element);
+    console.log(settings.id);
     el = document.querySelector(element);
-    if (_ref = el.tagName.toLowerCase(), __indexOf.call(controlTags, _ref) >= 0) {
+    if (_ref1 = el.tagName.toLowerCase(), __indexOf.call(controlTags, _ref1) >= 0) {
       components.push(el);
     } else {
       Array.prototype.push.apply(components, qsa(el, controlTags.join(", ")));
     }
   } else if (element.length != null) {
     Array.prototype.forEach.call(element, function(el) {
-      var _ref1;
-      if ((el instanceof ControlCollection) || (el instanceof Element && (_ref1 = el.tagName.toLowerCase(), __indexOf.call(controlTags, _ref1) >= 0))) {
+      var _ref2;
+      if ((el instanceof ControlCollection) || (el instanceof Element && (_ref2 = el.tagName.toLowerCase(), __indexOf.call(controlTags, _ref2) >= 0))) {
         return components.push(el);
       }
     });
   }
-  controls = components.map(buildControl);
+  controls = components.map(function(item) {
+    if (item instanceof Element) {
+      return buildControl(item);
+    } else {
+      return item;
+    }
+  });
   return new ControlCollection(controls, settings);
 };
 
@@ -488,6 +494,18 @@ utilities = {
   },
   filter: function(arr, cb) {
     return Array.prototype.filter.call(arr, cb);
+  },
+  camelize: function(str) {
+    return str.replace(/(?:^|[-_])(\w)/g, function(_, c) {
+      if (c) {
+        return c.toUpperCase();
+      } else {
+        return "";
+      }
+    });
+  },
+  processSelector: function(str) {
+    return utilities.camelize(str).replace(/\W/g, "");
   }
 };
 

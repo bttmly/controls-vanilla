@@ -4,14 +4,11 @@ ButtonControl = require "./button-control.coffee"
 CheckableControl = require "./checkable-control.coffee"
 ControlCollection = require "./control-collection.coffee"
 
-utilities = require "./utilities.coffee"
-qsa = utilities.qsa
-extend = utilities.extend
+{ qsa, extend, processSelector } = require "./utilities.coffee"
 
 controlTags = [ "input", "select", "button", "textarea" ]
 
-defaults =
-
+defaults = {}
 
 buildControl = ( el ) ->
   switch el.tagName.toLowerCase()
@@ -30,12 +27,12 @@ buildControl = ( el ) ->
 
 Factory = ( element, options = {} ) ->
 
-  settings = extend( {}, defaults, options )
-
   components = []
+  settings = {}
 
   # if first arg is string, we think it's a selector
   if typeof element is "string"
+    settings.id = processSelector( element )
     # check the tag of the first element
     # if it's a control tag, push it into components
     el = document.querySelector( element )
@@ -55,7 +52,12 @@ Factory = ( element, options = {} ) ->
         components.push( el )
 
   # map components into Control instances 
-  controls = components.map buildControl
+  controls = components.map ( item ) ->
+    if item instanceof Element
+      return buildControl( item )
+    else
+      return item
+
 
   new ControlCollection( controls, settings )
 

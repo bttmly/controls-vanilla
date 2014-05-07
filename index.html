@@ -79,8 +79,6 @@
       width: 100%;
     }
 
-
-    input[type="radio"],
     input[type="checkbox"] {
       width: 1em;
       height: 1em;
@@ -93,7 +91,14 @@
     }
 
     input[type="radio"] {
-      border-radius: 1em;
+      width: .75em;
+      height: .75em;
+      position: relative;
+      top: 2px;
+    }
+
+    input[type="radio"] {
+      -webkit-transform: rotateZ(45deg);
     }
 
     button {
@@ -200,7 +205,7 @@
   <div class="wrapper">
     <div class="input-pane" id="controls">
 
-      <div class="control-wrapper">
+      <div class="control-wrapper" id="text-wrapper">
         <p>Single text input.</p>
         <input type="text" id="input1">
       </div>
@@ -208,15 +213,15 @@
       <div class="control-wrapper" id="checkbox-wrapper">
         <p>Checkbox group.</p>
         <label>
-          <input type="checkbox" id="checkbox1" name="checkbox" value="bourbon">
+          <input type="checkbox" id="checkbox1" name="checkbox" value="bourbon" required>
           Bourbon
         </label>
         <label>
-          <input type="checkbox" id="checkbox2" name="checkbox" value="rye">
+          <input type="checkbox" id="checkbox2" name="checkbox" value="rye" required>
           Rye
         </label>        
         <label>
-          <input type="checkbox" id="checkbox3" name="checkbox" value="scotch">
+          <input type="checkbox" id="checkbox3" name="checkbox" value="scotch" required>
           Scotch
         </label>        
       </div>
@@ -250,7 +255,7 @@
 
       <div class="control-wrapper" id="multi-select-wrapper">
         <p>Multiple select.</p>
-        <select multiple id="multi-select">
+        <select multiple id="multi-select" required>
           <option disabled>Pick some...</option>
           <option value="first">One Thing</option>
           <option value="second">Another thing</option>
@@ -302,21 +307,60 @@
         Log.erase();
       });
 
-      var checkboxCollection = Controls( "#checkbox-wrapper" );
-      var radioCollection = Controls( "#radio-wrapper" );
-      var textFieldsCollection = Controls( "#text-fields-wrapper" );
-      var singleSelectCollection = Controls( "#single-select-wrapper" );
-      var multiSelectCollection = Controls( "#multi-select-wrapper" );
+
+      var allTrue = function( arr ) {
+        return arr.every( function( i ) { return !!i } )
+      }
+
+      // make all collections inspectable on their own.
+      window.textCollection = Controls( "#text-wrapper" , {
+        valid : function() {
+          return !!this[0].el.value.length
+        }
+      });
+
+      window.checkboxCollection = Controls( "#checkbox-wrapper", {
+        valid : function() {
+          return !!this.filter( function( item ) {
+            return item.el.checked;
+          }).length;
+        }
+      });
+
+      window.radioCollection = Controls( "#radio-wrapper", {
+        valid : function() {
+          return !!this.filter( function( item ) {
+            return item.el.checked;
+          }).length
+        }
+      });
+
+      window.textFieldsCollection = Controls( "#text-fields-wrapper", {
+        valid : function() {
+          return allTrue( this.map( function( item ) {
+            return item.el.value.length
+          }));
+        }
+      });
+
+      window.singleSelectCollection = Controls( "#single-select-wrapper" );
+      window.multiSelectCollection = Controls( "#multi-select-wrapper" );
 
       var collections = [
-        checkboxCollection
-        radioCollection
-        textFieldsCollection
-        singleSelectCollection
+        textCollection,
+        checkboxCollection,
+        radioCollection,
+        textFieldsCollection,
+        singleSelectCollection,
         multiSelectCollection
       ]
 
-      window.masterCollection = Controls( collections )
+      window.masterCollection = Controls( collections );
+
+      checkboxCollection.on( "change", function( event ) {
+        console.log( event )
+      });
+
       masterCollection.on( "change", function( event ) {
         Log.print( JSON.stringify( this.value() ).replace(/,/g, ",\n") );
       });

@@ -10,7 +10,10 @@ class SelectControl extends BaseControl
     return results
 
   selected : ->
-    filter this.el.querySelectorAll( "option" ), ( opt ) ->
-      return opt.selected and opt.value and not opt.disabled
+    filter this.el.children, ( opt ) ->
+      return opt.tagName.toLowerCase() is "option" and opt.selected and opt.value and not opt.disabled
+
+  valid : ->
+    !!@value().length
 
 module.exports = SelectControl

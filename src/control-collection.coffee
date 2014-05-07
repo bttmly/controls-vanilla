@@ -1,5 +1,7 @@
 util = require "./utilities.coffee"
 extend = util.extend
+isEmpty = util.isEmpty
+each = util.each
 
 class ControlCollection extends Array
 
@@ -22,6 +24,7 @@ class ControlCollection extends Array
 
     settings = extend( {}, ControlCollection.defaults(), options )
     @id = settings.id
+    @valid = settings.valid if settings.valid
 
   value : ->
     values = {}
@@ -54,6 +57,34 @@ class ControlCollection extends Array
       results[component.id] = component.required()
     return results
 
+  valid : ->
+    checkedInSubCollection = []
+    collectionsValid = true
+    each @collections, ( collection ) ->
+      checkedInSubCollection.push.apply( checkedInSubCollection, collection )
+      try 
+        b = collection.valid()
+      catch e
+        console.log e.stack
+        console.log collection
+        throw e
+      collectionsValid = false unless b
+
+    singlesValid = true
+    for control in @
+      continue if control in checkedInSubCollection
+      try
+        b = control.valid()
+      catch e
+        console.log e.stack
+        console.log control
+        throw e
+      singlesValid = false unless b
+
+    return collectionsValid and singlesValid
+
+         
+
   on : ( eventType, handler ) ->
     handler = handler.bind( @ )
     for component in @
@@ -65,10 +96,9 @@ class ControlCollection extends Array
       component.off( arguments )
     @
 
-  trigger : ( eventType, handler ) ->
-    handler = handler.bind( @ )
+  trigger : ( eventType ) ->
     for component in @
-      component.trigger( arguments )
+      component.trigger( eventType )
     @
 
   where : ( obj ) ->

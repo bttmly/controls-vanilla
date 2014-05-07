@@ -8,8 +8,6 @@ ControlCollection = require "./control-collection.coffee"
 
 controlTags = [ "input", "select", "button", "textarea" ]
 
-defaults = {}
-
 buildControl = ( el ) ->
   switch el.tagName.toLowerCase()
     when "input" or "textarea"
@@ -28,11 +26,10 @@ buildControl = ( el ) ->
 Factory = ( element, options = {} ) ->
 
   components = []
-  settings = {}
 
   # if first arg is string, we think it's a selector
   if typeof element is "string"
-    settings.id = processSelector( element )
+    options.id = processSelector( element )
     # check the tag of the first element
     # if it's a control tag, push it into components
     el = document.querySelector( element )
@@ -59,7 +56,7 @@ Factory = ( element, options = {} ) ->
       return item
 
 
-  new ControlCollection( controls, settings )
+  new ControlCollection( controls, options )
 
 
 Factory.BaseControl = BaseControl

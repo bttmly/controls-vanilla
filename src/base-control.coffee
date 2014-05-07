@@ -12,7 +12,8 @@ class BaseControl
     settings = extend( {}, defaults, options )
     @el = el
     @id = el.getAttribute settings.identifyingAttribute
-
+    @type = el.type or el.tagName.toLowerCase()
+    @tag = el.tagName.toLowerCase()
 
   required : ( param ) ->
     if param?

@@ -1,7 +1,11 @@
-util = require "./utilities.coffee"
-extend = util.extend
-isEmpty = util.isEmpty
-each = util.each
+{ 
+  extend, 
+  isEmpty, 
+  each, 
+  mapToObject 
+} = require "./utilities.coffee"
+
+validation = require "./validation.coffee"
 
 class ControlCollection extends Array
 
@@ -26,7 +30,11 @@ class ControlCollection extends Array
 
     settings = extend( {}, ControlCollection.defaults(), options )
     @id = settings.id
-    @valid = settings.valid if settings.valid
+    if settings.valid
+      if typeof settings.valid is "string"
+        @valid = ->
+          validation[ settings.valid ]( @el.value )
+
 
 
   value : ->
@@ -49,19 +57,22 @@ class ControlCollection extends Array
 
 
   disabled : ( param ) ->
-    results = {}
-    for component in @
+    mapToObject @, ( component ) ->
       if param? then component.disabled( param )
-      results[component.id] = component.disabled()
-    return results
+      [ component.id, component.el.disabled ]
 
 
   required : ( param ) ->
-    results = {}
-    for component in this
+    mapToObject @, ( component ) ->
       if param? then component.required( param )
-      results[component.id] = component.required()
-    return results
+      [ component.id, component.el.required ]
+
+
+  checked : ( param ) ->
+    mapToObject @, ( component ) ->
+      if param? then component.checked( param )
+      [ component.id, component.el.checked ]
+
 
 
   valid : ->

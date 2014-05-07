@@ -33,11 +33,23 @@ utilities =
     utilities.camelize( str ).replace( /\W/g, "" )
 
   each : ( obj, itr ) ->
-    list = if Array.isArray( obj ) then obj.map (e, i) ->  i else Object.keys( obj )
+    list = if Array.isArray( obj ) then obj.map ( e, i ) ->  i else Object.keys( obj )
     i = 0
     while i < list.length
-      itr( obj[list[i]], list[ i ], obj )
+      itr( obj[ list[i] ], list[ i ], obj )
       i += 1
+
+  mapAllTrue : ( arr, fn ) ->
+    arr.map( fn ).every ( item ) -> !!item
+
+  # fn should return an array w/ length === 2
+  mapToObj : ( arr, fn ) ->
+    obj = {}
+    for i in arr
+      keyVal = fn( i )
+      if Array.isArray( keyVal) and keyVal.length is 2
+        obj[ keyVal[0] ] = keyVal[1]
+    obj
 
   isEmpty : ( obj ) ->
     return if Array.isArray( obj ) then !!obj.length else !!Object.keys( obj ).length

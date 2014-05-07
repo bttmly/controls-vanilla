@@ -315,14 +315,14 @@
       // make all collections inspectable on their own.
       window.textCollection = Controls( "#text-wrapper" , {
         valid : function() {
-          return !!this[0].el.value.length
+          return !!this[0].value().trim().length
         }
       });
 
       window.checkboxCollection = Controls( "#checkbox-wrapper", {
         valid : function() {
           return !!this.filter( function( item ) {
-            return item.el.checked;
+            return item.checked();
           }).length;
         }
       });
@@ -330,7 +330,7 @@
       window.radioCollection = Controls( "#radio-wrapper", {
         valid : function() {
           return !!this.filter( function( item ) {
-            return item.el.checked;
+            return item.checked();
           }).length
         }
       });
@@ -338,7 +338,7 @@
       window.textFieldsCollection = Controls( "#text-fields-wrapper", {
         valid : function() {
           return allTrue( this.map( function( item ) {
-            return item.el.value.length
+            return item.value().trim().length
           }));
         }
       });

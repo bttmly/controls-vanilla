@@ -18,6 +18,8 @@ BaseControl = (function() {
     settings = extend({}, defaults, options);
     this.el = el;
     this.id = el.getAttribute(settings.identifyingAttribute);
+    this.type = el.type || el.tagName.toLowerCase();
+    this.tag = el.tagName.toLowerCase();
   }
 
   BaseControl.prototype.required = function(param) {
@@ -137,18 +139,14 @@ module.exports = CheckableControl;
 
 
 },{"./base-control.coffee":1}],4:[function(require,module,exports){
-var ControlCollection, each, extend, isEmpty, util,
+var ControlCollection, each, extend, isEmpty, mapToObject, validation, _ref,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-util = require("./utilities.coffee");
+_ref = require("./utilities.coffee"), extend = _ref.extend, isEmpty = _ref.isEmpty, each = _ref.each, mapToObject = _ref.mapToObject;
 
-extend = util.extend;
-
-isEmpty = util.isEmpty;
-
-each = util.each;
+validation = require("./validation.coffee");
 
 ControlCollection = (function(_super) {
   __extends(ControlCollection, _super);
@@ -182,7 +180,11 @@ ControlCollection = (function(_super) {
     settings = extend({}, ControlCollection.defaults(), options);
     this.id = settings.id;
     if (settings.valid) {
-      this.valid = settings.valid;
+      if (typeof settings.valid === "string") {
+        this.valid = function() {
+          return validation[settings.valid](this.el.value);
+        };
+      }
     }
   }
 
@@ -216,29 +218,30 @@ ControlCollection = (function(_super) {
   };
 
   ControlCollection.prototype.disabled = function(param) {
-    var component, results, _i, _len;
-    results = {};
-    for (_i = 0, _len = this.length; _i < _len; _i++) {
-      component = this[_i];
+    return mapToObject(this, function(component) {
       if (param != null) {
         component.disabled(param);
       }
-      results[component.id] = component.disabled();
-    }
-    return results;
+      return [component.id, component.el.disabled];
+    });
   };
 
   ControlCollection.prototype.required = function(param) {
-    var component, results, _i, _len;
-    results = {};
-    for (_i = 0, _len = this.length; _i < _len; _i++) {
-      component = this[_i];
+    return mapToObject(this, function(component) {
       if (param != null) {
         component.required(param);
       }
-      results[component.id] = component.required();
-    }
-    return results;
+      return [component.id, component.el.required];
+    });
+  };
+
+  ControlCollection.prototype.checked = function(param) {
+    return mapToObject(this, function(component) {
+      if (param != null) {
+        component.checked(param);
+      }
+      return [component.id, component.el.checked];
+    });
   };
 
   ControlCollection.prototype.valid = function() {
@@ -344,10 +347,17 @@ ControlCollection = (function(_super) {
 module.exports = ControlCollection;
 
 
-},{"./utilities.coffee":8}],5:[function(require,module,exports){
+},{"./utilities.coffee":8,"./validation.coffee":9}],5:[function(require,module,exports){
 (function(root, factory) {
-  root = window;
-  return root.Controls = factory(root, {});
+  if (typeof define === "function" && define.amd) {
+    define(["exports"], function(exports) {
+      root.Controls = factory(root, exports);
+    });
+  } else if (typeof exports !== "undefined") {
+    factory(root, exports);
+  } else {
+    root.Controls = factory(root, {});
+  }
 })(this, function(root, Controls) {
   Controls = require("./factory.coffee");
   return Controls;
@@ -355,7 +365,7 @@ module.exports = ControlCollection;
 
 
 },{"./factory.coffee":6}],6:[function(require,module,exports){
-var BaseControl, ButtonControl, CheckableControl, ControlCollection, Factory, SelectControl, buildControl, controlTags, extend, processSelector, qsa, _ref,
+var BaseControl, ButtonControl, CheckableControl, ControlCollection, Factory, SelectControl, buildControl, controlTags, extend, processSelector, qsa, validation, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 BaseControl = require("./base-control.coffee");
@@ -367,6 +377,8 @@ ButtonControl = require("./button-control.coffee");
 CheckableControl = require("./checkable-control.coffee");
 
 ControlCollection = require("./control-collection.coffee");
+
+validation = require("./validation.coffee");
 
 _ref = require("./utilities.coffee"), qsa = _ref.qsa, extend = _ref.extend, processSelector = _ref.processSelector;
 
@@ -422,6 +434,21 @@ Factory = function(element, options) {
   return new ControlCollection(controls, options);
 };
 
+Factory.addValidation = function(key, val) {
+  var fn;
+  if (validation[key]) {
+    return false;
+  }
+  if (val instanceof RegExp) {
+    fn = function(str) {
+      return val.match(str);
+    };
+  } else if (val instanceof Function) {
+    fn = val;
+  }
+  return validation[key] = fn;
+};
+
 Factory.BaseControl = BaseControl;
 
 Factory.SelectControl = SelectControl;
@@ -435,7 +462,7 @@ Factory.ControlCollection = ControlCollection;
 module.exports = Factory;
 
 
-},{"./base-control.coffee":1,"./button-control.coffee":2,"./checkable-control.coffee":3,"./control-collection.coffee":4,"./select-control.coffee":7,"./utilities.coffee":8}],7:[function(require,module,exports){
+},{"./base-control.coffee":1,"./button-control.coffee":2,"./checkable-control.coffee":3,"./control-collection.coffee":4,"./select-control.coffee":7,"./utilities.coffee":8,"./validation.coffee":9}],7:[function(require,module,exports){
 var BaseControl, SelectControl, filter, utilities,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -550,6 +577,23 @@ utilities = {
     }
     return _results;
   },
+  mapAllTrue: function(arr, fn) {
+    return arr.map(fn).every(function(item) {
+      return !!item;
+    });
+  },
+  mapToObj: function(arr, fn) {
+    var i, keyVal, obj, _i, _len;
+    obj = {};
+    for (_i = 0, _len = arr.length; _i < _len; _i++) {
+      i = arr[_i];
+      keyVal = fn(i);
+      if (Array.isArray(keyVal) && keyVal.length === 2) {
+        obj[keyVal[0]] = keyVal[1];
+      }
+    }
+    return obj;
+  },
   isEmpty: function(obj) {
     if (Array.isArray(obj)) {
       return !!obj.length;
@@ -562,4 +606,62 @@ utilities = {
 module.exports = utilities;
 
 
-},{}]},{},[5])
+},{}],9:[function(require,module,exports){
+var util, validations,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+util = require("./utilities.coffee");
+
+validations = {
+  email: (function() {
+    var i;
+    i = document.createElement("input");
+    i.type = "email";
+    return function() {
+      i.value = this.el.value;
+      return i.validity.valid;
+    };
+  })(),
+  numeric: function(el) {
+    return /^\d+$/.test(el.value);
+  },
+  alphanumeric: function(el) {
+    return /^[a-z0-9]+$/i.test(el.value);
+  },
+  letters: function(el) {
+    return /^[a-z]+$/i.test(el.value);
+  },
+  allowed: function(allowedChars) {
+    allowedChars = allowedChars.split();
+    return function() {
+      var char, str, _i, _len;
+      str = this.el.value.split();
+      for (_i = 0, _len = str.length; _i < _len; _i++) {
+        char = str[_i];
+        if (__indexOf.call(allowedChars, char) < 0) {
+          return false;
+        }
+      }
+      return true;
+    };
+  },
+  notAllowed: function(notAllowedChars) {
+    notAllowedChars = notAllowedChars.split();
+    return function() {
+      var char, str, _i, _len;
+      str = this.el.value.split();
+      for (_i = 0, _len = notAllowedChars.length; _i < _len; _i++) {
+        char = notAllowedChars[_i];
+        if (__indexOf.call(notAllowedChars, char) >= 0) {
+          return false;
+        }
+      }
+      return true;
+    };
+  }
+};
+
+module.exports = validations;
+
+
+},{"./utilities.coffee":8}]},{},[5])

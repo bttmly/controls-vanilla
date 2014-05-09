@@ -6,10 +6,10 @@ defaults =
   identifyingAttribute: "id"
 
 class BaseControl
-
-
   constructor: ( el, options = {} ) ->
     settings = extend( {}, defaults, options )
+    unless el instanceof Element
+      console.log el
     @el = el
     @id = el.getAttribute settings.identifyingAttribute
     @type = el.type or el.tagName.toLowerCase()

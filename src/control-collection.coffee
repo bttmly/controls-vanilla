@@ -2,7 +2,7 @@
   extend, 
   isEmpty, 
   each, 
-  mapToObject 
+  mapToObj 
 } = require "./utilities.coffee"
 
 validation = require "./validation.coffee"
@@ -16,7 +16,6 @@ class ControlCollection extends Array
       id : do ->
         counter += 1
         return "controlCollection#{ counter }"
-
 
   constructor: ( components, options ) ->
     controls = []
@@ -35,9 +34,16 @@ class ControlCollection extends Array
         @valid = ->
           validation[ settings.valid ]( @el.value )
 
+  # Should be set to either "valueAsObject" or "valueAsArray"
+  # Setting this property with the options object in the constructor
+  # will override this class default.
+  defaultValue: "valueAsObject"
 
+  value : -> @[@defaultValue]()
 
-  value : ->
+  # returns an object with key/value pairs representing the element's id
+  # and it's value
+  valueAsObject : ->
     values = {}
     for component in @
       val = component.value()
@@ -45,7 +51,8 @@ class ControlCollection extends Array
         values[ component.id ] = val
     values
 
-
+  # returns an array of objects. Each object has an 'id' key representing
+  # the element's id, and a 'val' key representing the value.
   valueAsArray : ->
     values = []
     for component in @
@@ -55,26 +62,37 @@ class ControlCollection extends Array
         val: val
     values
 
-
+  # ::disabled, ::required, and ::checked all follow the same jQuery-like
+  # pattern. Calling with an argument SETS, while calling without GETS.
+  # When setting, you get the collection returned for chaining.
+  # When getting, you get an object representing the state of that property
+  # on each component
   disabled : ( param ) ->
-    mapToObject @, ( component ) ->
+    m = mapToObj @, ( component ) ->
       if param? then component.disabled( param )
-      [ component.id, component.el.disabled ]
-
+      [ component.id, component.disabled() ]
+    if param then @ else m
 
   required : ( param ) ->
-    mapToObject @, ( component ) ->
+    m = mapToObj @, ( component ) ->
       if param? then component.required( param )
-      [ component.id, component.el.required ]
-
+      [ component.id, component.required() ]
+    if param then @ else m
 
   checked : ( param ) ->
-    mapToObject @, ( component ) ->
+    m = mapToObj @, ( component ) ->
       if param? then component.checked( param )
-      [ component.id, component.el.checked ]
+      [ component.id, component.checked() ]
+    if param then @ else m
 
 
-
+  # For ::valid, we want to check any sub-collections of this collection
+  # for validity AS A GROUP. Sub-collections can have custom validity
+  # rules, so the collection might be valid even if it has invalid components.
+  # After that, we want to check any Controls in this collection on individual 
+  # basis. We do this by checking if each control is in a sub-collection we've
+  # already covered; if so, we don't need to check it's individual validity.
+  # We return true only if all singles and all collections are valid.
   valid : ->
     checkedInSubCollection = []
     collectionsValid = true
@@ -108,14 +126,16 @@ class ControlCollection extends Array
       component.trigger( eventType )
     @
 
-
+  # can combine where and find functionality into one method
+  # where and find operate like their Underscore analogs.
   where : ( obj ) ->
     ret = []
     for component in @
       match = true
       for key, val of obj
         match = false if component[key] isnt val
-      ret.push component if match is true
+      ret.push component if match
+    ret
 
 
   find : ( obj ) ->
@@ -123,11 +143,14 @@ class ControlCollection extends Array
       match = true
       for key, val of obj
         match = false if component[key] isnt val
-      return component if match is true
+      return component if match
 
 
   byId : ( id ) ->
     @find( id: id )
+
+
+
 
 
 module.exports = ControlCollection

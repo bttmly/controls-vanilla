@@ -48,7 +48,7 @@
       border: 1px solid slategray;
       outline: 8px solid transparent;
       -webkit-transition: outline .25s ease-in-out;
-      transition: outline .25s ease-in-out;*/      
+      transition: outline .25s ease-in-out;    
 /*      box-shadow: 0 0 0 .5em transparent;
       -webkit-transition: box-shadow .25s ease-in-out;
       transition: box-shadow .25s ease-in-out;*/
@@ -79,15 +79,16 @@
       width: 100%;
     }
 
+    input[type="checkbox"],
+    input[type="radio"] {
+      -webkit-transition-property: background, outline;
+      transition-property: background, outline;
+    }
+
     input[type="checkbox"] {
       width: 1em;
       height: 1em;
       vertical-align: bottom;
-    }
-
-    input[type="radio"]:checked,
-    input[type="checkbox"]:checked {
-      background: lightslategray;
     }
 
     input[type="radio"] {
@@ -95,10 +96,12 @@
       height: .75em;
       position: relative;
       top: 2px;
+      -webkit-transform: rotateZ(45deg);
     }
 
-    input[type="radio"] {
-      -webkit-transform: rotateZ(45deg);
+    input[type="radio"]:checked,
+    input[type="checkbox"]:checked {
+      background: lightslategray;
     }
 
     button {
@@ -306,6 +309,8 @@
       clearButton.addEventListener( "click", function( event ) {
         Log.erase();
       });
+
+
 
 
       var allTrue = function( arr ) {

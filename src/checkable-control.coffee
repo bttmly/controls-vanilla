@@ -1,7 +1,6 @@
 BaseControl = require "./base-control.coffee"
 
 class CheckableControl extends BaseControl
-  
 
   value : ( param ) ->
     if param

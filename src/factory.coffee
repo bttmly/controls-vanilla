@@ -13,33 +13,36 @@ buildControl = ( el ) ->
   switch el.tagName.toLowerCase()
     when "input" or "textarea"
       if el.type is "radio" or el.type is "checkbox"
-        return new CheckableControl el
+        new CheckableControl el
       else
-        return new BaseControl el
+        new BaseControl el
     when "select"
-      return new SelectControl el
+      new SelectControl el
     when "button"
-      return new ButtonControl el
+      new ButtonControl el
     else
       throw new TypeError "Non-control element passed!"
-
 
 Factory = ( element, options = {} ) ->
 
   components = []
 
   # if first arg is string, we think it's a selector
+  # so, get the matching element and continue
   if typeof element is "string"
     options.id = processSelector( element )
     # check the tag of the first element
     # if it's a control tag, push it into components
-    el = document.querySelector( element )
-    if el.tagName.toLowerCase() in controlTags
-      components.push el
+    element = document.querySelector( element )
+  
+  # if we have an Element here, we see if it's a control,
+  if element instanceof Element
+    if element.tagName.toLowerCase() in controlTags
+      components.push element
     # if not, find all descendants matching control tags
     # and push them into components
     else 
-      Array.prototype.push.apply components, qsa el, controlTags.join( ", " )
+      Array.prototype.push.apply components, qsa element, controlTags.join( ", " )
 
   # if first arg has length (and not a string)
   # we think it's array-like ( array, jQuery, NodeList, etc. )
@@ -55,7 +58,6 @@ Factory = ( element, options = {} ) ->
       return buildControl( item )
     else
       return item
-
 
   new ControlCollection( controls, options )
 

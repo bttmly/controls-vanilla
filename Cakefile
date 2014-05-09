@@ -16,22 +16,27 @@ task "build", "Build project.", ->
         throw err if err
         console.log "Build complete."
 
+command = [ "src/controls.coffee", "-t", "coffeeify", "-o", "controls.js", "-v" ]
+
 # Not working for now; process doesn't keep running.
 #
 # task "watch", "Watch project for changes", ->
 #   w = watchify [ "./src/controls.coffee" ]
 #   w.transform "coffeeify"
-#   console.log w
 #   w.on "update", ->
-#     w.bundle ( err, src ) ->
+#     w.bundle { standalone: "Controls" }, ( err, src ) ->
 #       throw err if err
 #       fs.writeFile "controls.js", src, ( err ) ->
 #         throw err if err
 #         console.log "Watch build at #{ ( new Date() ).toString().split( " " )[4] }"
 
-# Use exec in the meantime.
+# Doesn't work either.
 #
+# task "watch", "Watch project for changes", ->
+#   coffee = spawn "watchify", command
+#   coffee.stdout.on "data", ( data ) -> console.log data.toString().trim()
+#   coffee.stderr.on "data", ( data ) -> console.log data.toString().trim()
+
 task "watch", "Watch project for changes", ->
-  coffee = exec "watchify src/controls.coffee -t coffeeify -o controls.js -v"
-  coffee.stdout.on "data", ( data ) -> console.log data.toString().trim()
-  coffee.stderr.on "data", ( data ) -> console.log data.toString().trim()
+  exec "watchify " + command.join( " " )
+

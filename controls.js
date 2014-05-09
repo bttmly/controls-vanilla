@@ -16,6 +16,9 @@ BaseControl = (function() {
       options = {};
     }
     settings = extend({}, defaults, options);
+    if (!(el instanceof Element)) {
+      console.log(el);
+    }
     this.el = el;
     this.id = el.getAttribute(settings.identifyingAttribute);
     this.type = el.type || el.tagName.toLowerCase();
@@ -90,7 +93,9 @@ ButtonControl = (function(_super) {
   __extends(ButtonControl, _super);
 
   function ButtonControl() {
-    return ButtonControl.__super__.constructor.apply(this, arguments);
+    ButtonControl.__super__.constructor.call(this, arguments);
+    this.el.type = "button";
+    this.type = "button";
   }
 
   ButtonControl.prototype.value = function() {
@@ -139,12 +144,12 @@ module.exports = CheckableControl;
 
 
 },{"./base-control.coffee":1}],4:[function(require,module,exports){
-var ControlCollection, each, extend, isEmpty, mapToObject, validation, _ref,
+var ControlCollection, each, extend, isEmpty, mapToObj, validation, _ref,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-_ref = require("./utilities.coffee"), extend = _ref.extend, isEmpty = _ref.isEmpty, each = _ref.each, mapToObject = _ref.mapToObject;
+_ref = require("./utilities.coffee"), extend = _ref.extend, isEmpty = _ref.isEmpty, each = _ref.each, mapToObj = _ref.mapToObj;
 
 validation = require("./validation.coffee");
 
@@ -188,7 +193,13 @@ ControlCollection = (function(_super) {
     }
   }
 
+  ControlCollection.prototype.defaultValue = "valueAsObject";
+
   ControlCollection.prototype.value = function() {
+    return this[this.defaultValue]();
+  };
+
+  ControlCollection.prototype.valueAsObject = function() {
     var component, val, values, _i, _len;
     values = {};
     for (_i = 0, _len = this.length; _i < _len; _i++) {
@@ -218,30 +229,48 @@ ControlCollection = (function(_super) {
   };
 
   ControlCollection.prototype.disabled = function(param) {
-    return mapToObject(this, function(component) {
+    var m;
+    m = mapToObj(this, function(component) {
       if (param != null) {
         component.disabled(param);
       }
-      return [component.id, component.el.disabled];
+      return [component.id, component.disabled()];
     });
+    if (param) {
+      return this;
+    } else {
+      return m;
+    }
   };
 
   ControlCollection.prototype.required = function(param) {
-    return mapToObject(this, function(component) {
+    var m;
+    m = mapToObj(this, function(component) {
       if (param != null) {
         component.required(param);
       }
-      return [component.id, component.el.required];
+      return [component.id, component.required()];
     });
+    if (param) {
+      return this;
+    } else {
+      return m;
+    }
   };
 
   ControlCollection.prototype.checked = function(param) {
-    return mapToObject(this, function(component) {
+    var m;
+    m = mapToObj(this, function(component) {
       if (param != null) {
         component.checked(param);
       }
-      return [component.id, component.el.checked];
+      return [component.id, component.checked()];
     });
+    if (param) {
+      return this;
+    } else {
+      return m;
+    }
   };
 
   ControlCollection.prototype.valid = function() {
@@ -296,9 +325,8 @@ ControlCollection = (function(_super) {
   };
 
   ControlCollection.prototype.where = function(obj) {
-    var component, key, match, ret, val, _i, _len, _results;
+    var component, key, match, ret, val, _i, _len;
     ret = [];
-    _results = [];
     for (_i = 0, _len = this.length; _i < _len; _i++) {
       component = this[_i];
       match = true;
@@ -308,13 +336,11 @@ ControlCollection = (function(_super) {
           match = false;
         }
       }
-      if (match === true) {
-        _results.push(ret.push(component));
-      } else {
-        _results.push(void 0);
+      if (match) {
+        ret.push(component);
       }
     }
-    return _results;
+    return ret;
   };
 
   ControlCollection.prototype.find = function(obj) {
@@ -328,7 +354,7 @@ ControlCollection = (function(_super) {
           match = false;
         }
       }
-      if (match === true) {
+      if (match) {
         return component;
       }
     }
@@ -348,20 +374,7 @@ module.exports = ControlCollection;
 
 
 },{"./utilities.coffee":8,"./validation.coffee":9}],5:[function(require,module,exports){
-(function(root, factory) {
-  if (typeof define === "function" && define.amd) {
-    define(["exports"], function(exports) {
-      root.Controls = factory(root, exports);
-    });
-  } else if (typeof exports !== "undefined") {
-    factory(root, exports);
-  } else {
-    root.Controls = factory(root, {});
-  }
-})(this, function(root, Controls) {
-  Controls = require("./factory.coffee");
-  return Controls;
-});
+window.Controls = require("./factory.coffee");
 
 
 },{"./factory.coffee":6}],6:[function(require,module,exports){
@@ -403,18 +416,20 @@ buildControl = function(el) {
 };
 
 Factory = function(element, options) {
-  var components, controls, el, _ref1;
+  var components, controls, _ref1;
   if (options == null) {
     options = {};
   }
   components = [];
   if (typeof element === "string") {
     options.id = processSelector(element);
-    el = document.querySelector(element);
-    if (_ref1 = el.tagName.toLowerCase(), __indexOf.call(controlTags, _ref1) >= 0) {
-      components.push(el);
+    element = document.querySelector(element);
+  }
+  if (element instanceof Element) {
+    if (_ref1 = element.tagName.toLowerCase(), __indexOf.call(controlTags, _ref1) >= 0) {
+      components.push(element);
     } else {
-      Array.prototype.push.apply(components, qsa(el, controlTags.join(", ")));
+      Array.prototype.push.apply(components, qsa(element, controlTags.join(", ")));
     }
   } else if (element.length != null) {
     Array.prototype.forEach.call(element, function(el) {

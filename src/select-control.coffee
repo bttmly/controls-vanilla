@@ -4,7 +4,6 @@ filter = utilities.filter
 
 class SelectControl extends BaseControl
 
-
   value : ->
     results = []
     for option in this.selected()

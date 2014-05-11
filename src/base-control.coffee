@@ -29,6 +29,11 @@ class BaseControl
       return @el.disabled
 
 
+  checked : -> undefined
+
+  selected : -> undefined
+
+
   value : ( param ) ->
     if param?
       @el.value = param
@@ -49,7 +54,6 @@ class BaseControl
       @el.value = ""
       @dispatchEvent "change"
       
-
 
   addEventListener : ( eventType, handler ) ->
     handler = handler.bind( @ )

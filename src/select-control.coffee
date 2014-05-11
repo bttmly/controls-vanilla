@@ -19,7 +19,7 @@ class SelectControl extends BaseControl
     !!@value().length
 
   clear : ->
-    if selected().length
+    if @selected().length
       each @el.options, ( option ) ->
         option.selected = false
       @dispatchEvent "change"

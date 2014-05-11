@@ -81,7 +81,6 @@ class ControlCollection extends Array
       [ component.id, component.checked() ]
     if param then @ else m
 
-
   clear : ->
     component.clear() for component in @
     @
@@ -110,6 +109,8 @@ class ControlCollection extends Array
 
   # Listens for events on the Collection's controls
   # Returns the listener so it can be saved and later removed.
+  # Handler context defaults to this collection; special string
+  # values "target" and "control" can change it, (or can be set to whatever).
   addEventListener : ( eventType, handler, context = @ ) ->
     fn = ( event ) =>
       if event.target in @els
@@ -124,10 +125,13 @@ class ControlCollection extends Array
     document.removeEventListener( eventType, handler )
 
 
-  dispatchEvent : ( event ) ->
-    if typeof event is "string"
-      event = new Event( event )
-    el.dispatchEvent( event ) for el in @els
+  dispatchEvent : ( evt ) ->
+    if typeof evt is "string"
+      evt = new Event( evt )
+    if evt instanceof Event
+      el.dispatchEvent( evt ) for el in @els
+    else
+      throw new TypeError "Pass a string or Event object to dispatchEvent()!"
 
 
   # can combine where and find functionality into one method
@@ -148,6 +152,7 @@ class ControlCollection extends Array
       for key, val of obj
         match = false if component[key] isnt val
       return component if match
+    return false
 
 
   byId : ( id ) ->

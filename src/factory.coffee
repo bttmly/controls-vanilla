@@ -5,7 +5,7 @@ CheckableControl = require "./checkable-control.coffee"
 ControlCollection = require "./control-collection.coffee"
 validationFunctions = require "./validation.coffee"
 
-{ qsa, extend, processSelector } = require "./utilities.coffee"
+{ qsa, extend, processSelector, each } = require "./utilities.coffee"
 
 controlTags = [ "input", "select", "button", "textarea" ]
 
@@ -42,22 +42,20 @@ Factory = ( element, options = {} ) ->
     # if not, find all descendants matching control tags
     # and push them into components
     else 
-      Array.prototype.push.apply components, qsa element, controlTags.join( ", " )
+      [].push.apply components, qsa element, controlTags.join( ", " )
 
   # if first arg has length (and not a string)
   # we think it's array-like ( array, jQuery, NodeList, etc. )
   # so, check each element, and push those matching into components
   else if element.length?
-    Array.prototype.forEach.call element, ( el ) ->
-      if ( el instanceof ControlCollection ) or ( el instanceof Element and el.tagName.toLowerCase() in controlTags )
-        components.push( el )
+    each element, ( el ) ->
+      if ( el instanceof BaseControl ) or ( el instanceof ControlCollection ) or ( el instanceof Element and el.tagName.toLowerCase() in controlTags )
+        [].push.apply( components, el )
 
   # map components into Control instances 
   controls = components.map ( item ) ->
-    if item instanceof Element
-      return buildControl( item )
-    else
-      return item
+    item = buildControl( item ) unless item instanceof BaseControl
+    item
 
   new ControlCollection( controls, options )
 

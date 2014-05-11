@@ -73,10 +73,10 @@ collectionValidations =
     @every ( control ) -> control.valid()
 
   allChecked: ->
-    @every ( control ) -> control.el.checked
+    @every ( control ) -> control.checked()
 
   anyChecked: ->
-    @some ( control ) -> control.el.checked
+    @some ( control ) -> control.checked()
 
   allHaveSelected: ->
     @every ( control ) -> control.selected().legnth
@@ -86,4 +86,7 @@ collectionValidations =
 
 
 
-module.exports = controlValidations
+module.exports = {
+  controlValidations: controlValidations
+  collectionValidations: collectionValidations
+}

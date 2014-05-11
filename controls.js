@@ -1,9 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var BaseControl, defaults, extend, util;
+var BaseControl, defaults, extend;
 
-util = require("./utilities.coffee");
-
-extend = util.extend;
+extend = require("./utilities.coffee").extend;
 
 defaults = {
   identifyingAttribute: "id"
@@ -378,7 +376,7 @@ window.Controls = require("./factory.coffee");
 
 
 },{"./factory.coffee":6}],6:[function(require,module,exports){
-var BaseControl, ButtonControl, CheckableControl, ControlCollection, Factory, SelectControl, buildControl, controlTags, extend, processSelector, qsa, validation, _ref,
+var BaseControl, ButtonControl, CheckableControl, ControlCollection, Factory, SelectControl, buildControl, controlTags, extend, processSelector, qsa, validationFunctions, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 BaseControl = require("./base-control.coffee");
@@ -391,7 +389,7 @@ CheckableControl = require("./checkable-control.coffee");
 
 ControlCollection = require("./control-collection.coffee");
 
-validation = require("./validation.coffee");
+validationFunctions = require("./validation.coffee");
 
 _ref = require("./utilities.coffee"), qsa = _ref.qsa, extend = _ref.extend, processSelector = _ref.processSelector;
 
@@ -449,9 +447,11 @@ Factory = function(element, options) {
   return new ControlCollection(controls, options);
 };
 
+Factory._validations = validationFunctions;
+
 Factory.addValidation = function(key, val) {
   var fn;
-  if (validation[key]) {
+  if (this._validation[key]) {
     return false;
   }
   if (val instanceof RegExp) {
@@ -461,7 +461,7 @@ Factory.addValidation = function(key, val) {
   } else if (val instanceof Function) {
     fn = val;
   }
-  return validation[key] = fn;
+  return this._validation[key] = fn;
 };
 
 Factory.BaseControl = BaseControl;
@@ -496,21 +496,23 @@ SelectControl = (function(_super) {
   }
 
   SelectControl.prototype.value = function() {
-    var option, results, _i, _len, _ref;
-    results = [];
-    _ref = this.selected();
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      option = _ref[_i];
-      if (option.value) {
-        results.push(option.value);
-      }
+    var sel;
+    sel = this.selected();
+    if (!sel.length) {
+      return;
     }
-    return results;
+    if (sel.length > 1) {
+      return sel.map(function(opt) {
+        return opt.value;
+      });
+    } else {
+      return sel[0].value;
+    }
   };
 
   SelectControl.prototype.selected = function() {
-    return filter(this.el.children, function(opt) {
-      return opt.tagName.toLowerCase() === "option" && opt.selected && opt.value && !opt.disabled;
+    return filter(this.el.options, function(opt) {
+      return opt.selected && !opt.disabled;
     });
   };
 
@@ -526,131 +528,174 @@ module.exports = SelectControl;
 
 
 },{"./base-control.coffee":1,"./utilities.coffee":8}],8:[function(require,module,exports){
-var utilities,
+var camelize, each, extend, filter, isEmpty, map, mapAllTrue, mapToObj, processSelector, qsa, slice,
   __hasProp = {}.hasOwnProperty,
   __slice = [].slice;
 
-utilities = {
-  extend: function(out) {
-    var i, key, _ref;
-    out || (out = {});
-    i = 1;
-    while (i < arguments.length) {
-      if (!arguments[i]) {
-        continue;
-      }
-      _ref = arguments[i];
-      for (key in _ref) {
-        if (!__hasProp.call(_ref, key)) continue;
-        out[key] = arguments[i][key];
-      }
-      i++;
+extend = function(out) {
+  var i, key, _ref;
+  out || (out = {});
+  i = 1;
+  while (i < arguments.length) {
+    if (!arguments[i]) {
+      continue;
     }
-    return out;
-  },
-  qsa: function() {
-    var el, selector;
-    if (arguments[0] instanceof Node) {
-      el = arguments[0];
-      selector = arguments[1];
+    _ref = arguments[i];
+    for (key in _ref) {
+      if (!__hasProp.call(_ref, key)) continue;
+      out[key] = arguments[i][key];
+    }
+    i++;
+  }
+  return out;
+};
+
+qsa = function() {
+  var el, selector;
+  if (arguments[0] instanceof Node) {
+    el = arguments[0];
+    selector = arguments[1];
+  } else {
+    el = document;
+    selector = arguments[0];
+  }
+  return slice(el.querySelectorAll(selector));
+};
+
+slice = function() {
+  var args, arr;
+  arr = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+  return Array.prototype.slice.apply(arr, args);
+};
+
+filter = function(arr, cb) {
+  return Array.prototype.filter.call(arr, cb);
+};
+
+map = function(arr, cb) {
+  return Array.prototype.map.call(arr, cb);
+};
+
+each = function(obj, itr) {
+  var i, list, _results;
+  list = Array.isArray(obj) ? obj.map(function(e, i) {
+    return i;
+  }) : Object.keys(obj);
+  i = 0;
+  _results = [];
+  while (i < list.length) {
+    itr(obj[list[i]], list[i], obj);
+    _results.push(i += 1);
+  }
+  return _results;
+};
+
+camelize = function(str) {
+  return str.replace(/(?:^|[-_])(\w)/g, function(_, c) {
+    if (c) {
+      return c.toUpperCase();
     } else {
-      el = document;
-      selector = arguments[0];
+      return "";
     }
-    return utilities.slice(el.querySelectorAll(selector));
-  },
-  slice: function() {
-    var args, arr;
-    arr = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-    return Array.prototype.slice.apply(arr, args);
-  },
-  filter: function(arr, cb) {
-    return Array.prototype.filter.call(arr, cb);
-  },
-  camelize: function(str) {
-    return str.replace(/(?:^|[-_])(\w)/g, function(_, c) {
-      if (c) {
-        return c.toUpperCase();
-      } else {
-        return "";
-      }
-    });
-  },
-  processSelector: function(str) {
-    return utilities.camelize(str).replace(/\W/g, "");
-  },
-  each: function(obj, itr) {
-    var i, list, _results;
-    list = Array.isArray(obj) ? obj.map(function(e, i) {
-      return i;
-    }) : Object.keys(obj);
-    i = 0;
-    _results = [];
-    while (i < list.length) {
-      itr(obj[list[i]], list[i], obj);
-      _results.push(i += 1);
+  });
+};
+
+processSelector = function(str) {
+  return camelize(str).replace(/\W/g, "");
+};
+
+mapAllTrue = function(arr, fn) {
+  return arr.map(fn).every(function(item) {
+    return !!item;
+  });
+};
+
+mapToObj = function(arr, fn) {
+  var i, keyVal, obj, _i, _len;
+  obj = {};
+  for (_i = 0, _len = arr.length; _i < _len; _i++) {
+    i = arr[_i];
+    keyVal = fn(i);
+    if (Array.isArray(keyVal) && keyVal.length === 2) {
+      obj[keyVal[0]] = keyVal[1];
     }
-    return _results;
-  },
-  mapAllTrue: function(arr, fn) {
-    return arr.map(fn).every(function(item) {
-      return !!item;
-    });
-  },
-  mapToObj: function(arr, fn) {
-    var i, keyVal, obj, _i, _len;
-    obj = {};
-    for (_i = 0, _len = arr.length; _i < _len; _i++) {
-      i = arr[_i];
-      keyVal = fn(i);
-      if (Array.isArray(keyVal) && keyVal.length === 2) {
-        obj[keyVal[0]] = keyVal[1];
-      }
-    }
-    return obj;
-  },
-  isEmpty: function(obj) {
-    if (Array.isArray(obj)) {
-      return !!obj.length;
-    } else {
-      return !!Object.keys(obj).length;
-    }
+  }
+  return obj;
+};
+
+isEmpty = function(obj) {
+  if (Array.isArray(obj)) {
+    return !!obj.length;
+  } else {
+    return !!Object.keys(obj).length;
   }
 };
 
-module.exports = utilities;
+module.exports = {
+  extend: extend,
+  qsa: qsa,
+  slice: slice,
+  filter: filter,
+  each: each,
+  camelize: camelize,
+  processSelector: processSelector,
+  mapAllTrue: mapAllTrue,
+  mapToObj: mapToObj,
+  isEmpty: isEmpty
+};
 
 
 },{}],9:[function(require,module,exports){
-var util, validations,
+var validations,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-util = require("./utilities.coffee");
-
 validations = {
+  notEmpty: function() {
+    return function(str) {
+      return !!str;
+    };
+  },
+  notEmptyTrim: function() {
+    return function(str) {
+      return !!str.trim();
+    };
+  },
+  numeric: function() {
+    return function(str) {
+      return /^\d+$/.test(str);
+    };
+  },
+  alphanumeric: function() {
+    return function(str) {
+      return /^[a-z0-9]+$/i.test(str);
+    };
+  },
+  letters: function() {
+    return function(str) {
+      return /^[a-z]+$/i.test(str);
+    };
+  },
+  isValue: function(value) {
+    return function(str) {
+      return str === value;
+    };
+  },
   email: (function() {
     var i;
     i = document.createElement("input");
     i.type = "email";
     return function() {
-      i.value = this.el.value;
-      return i.validity.valid;
+      return function(str) {
+        i.value = str;
+        return i.validity.valid;
+      };
     };
   })(),
-  numeric: function(el) {
-    return /^\d+$/.test(el.value);
-  },
-  alphanumeric: function(el) {
-    return /^[a-z0-9]+$/i.test(el.value);
-  },
-  letters: function(el) {
-    return /^[a-z]+$/i.test(el.value);
-  },
   allowed: function(allowedChars) {
-    allowedChars = allowedChars.split();
-    return function() {
-      var char, str, _i, _len;
-      str = this.el.value.split();
+    allowedChars = allowedChars.split("");
+    return function(str) {
+      var char, _i, _len;
+      str = str.split("");
       for (_i = 0, _len = str.length; _i < _len; _i++) {
         char = str[_i];
         if (__indexOf.call(allowedChars, char) < 0) {
@@ -661,10 +706,10 @@ validations = {
     };
   },
   notAllowed: function(notAllowedChars) {
-    notAllowedChars = notAllowedChars.split();
-    return function() {
-      var char, str, _i, _len;
-      str = this.el.value.split();
+    notAllowedChars = notAllowedChars.split("");
+    return function(str) {
+      var char, _i, _len;
+      str = str.split("");
       for (_i = 0, _len = notAllowedChars.length; _i < _len; _i++) {
         char = notAllowedChars[_i];
         if (__indexOf.call(notAllowedChars, char) >= 0) {
@@ -673,10 +718,34 @@ validations = {
       }
       return true;
     };
+  },
+  numberBetween: function(min, max) {
+    return function(str) {
+      var _ref;
+      return (min <= (_ref = Number(str)) && _ref <= max);
+    };
+  },
+  numberMax: function(max) {
+    return validations.between(0, max);
+  },
+  numberMin: function(min) {
+    return validations.between(min, Number.POSITIVE_INFINITY);
+  },
+  lengthBetween: function(min, max) {
+    return function(str) {
+      var _ref;
+      return (min <= (_ref = str.length) && _ref <= max);
+    };
+  },
+  lengthMax: function(max) {
+    return validations.lengthBetween(0, max);
+  },
+  lengthMin: function(min) {
+    return validations.lengthBetween(min, Number.POSITIVE_INFINITY);
   }
 };
 
 module.exports = validations;
 
 
-},{"./utilities.coffee":8}]},{},[5])
+},{}]},{},[5])

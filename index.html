@@ -48,7 +48,7 @@
       border: 1px solid slategray;
       outline: 8px solid transparent;
       -webkit-transition: outline .25s ease-in-out;
-      transition: outline .25s ease-in-out;    
+      transition: outline .25s ease-in-out;
 /*      box-shadow: 0 0 0 .5em transparent;
       -webkit-transition: box-shadow .25s ease-in-out;
       transition: box-shadow .25s ease-in-out;*/
@@ -222,11 +222,11 @@
         <label>
           <input type="checkbox" id="checkbox2" name="checkbox" value="rye" required>
           Rye
-        </label>        
+        </label>
         <label>
           <input type="checkbox" id="checkbox3" name="checkbox" value="scotch" required>
           Scotch
-        </label>        
+        </label>
       </div>
 
 
@@ -235,15 +235,15 @@
         <label>
           <input type="radio" id="radio1" name="radio" value="neat">
           Neat
-        </label>        
+        </label>
         <label>
           <input type="radio" id="radio2" name="radio" value="rocks">
           On the rocks
-        </label> 
+        </label>
         <label>
           <input type="radio" id="radio3" name="radio" value="water">
           With water
-        </label>     
+        </label>
       </div>
 
       <div class="control-wrapper" id="single-select-wrapper">
@@ -294,15 +294,15 @@
 
       var Log = {};
       Log.el = document.querySelector( "#console-output" );
-      Log.erase = function() { 
+      Log.erase = function() {
         this.el.innerHTML = "";
         return this;
       };
-      Log.print = function( string ) { 
+      Log.print = function( string ) {
         string = "<pre>" + string + "</pre>";
         this.el.innerHTML += string;
         this.el.scrollTop = this.el.scrollHeight;
-        return this; 
+        return this;
       };
 
       var clearButton = document.querySelector( "#clear-console-button" );
@@ -349,7 +349,7 @@
       });
 
       window.singleSelectCollection = Controls( "#single-select-wrapper" );
-      
+
       window.multiSelectCollection = Controls( "#multi-select-wrapper" );
 
       var collections = [
@@ -371,7 +371,7 @@
         Log.print( JSON.stringify( this.value() ).replace(/,/g, ",\n") );
       });
 
-      
+
 
     }).call( this );
 

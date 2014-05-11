@@ -3,7 +3,7 @@ SelectControl = require "./select-control.coffee"
 ButtonControl = require "./button-control.coffee"
 CheckableControl = require "./checkable-control.coffee"
 ControlCollection = require "./control-collection.coffee"
-validation = require "./validation.coffee"
+validationFunctions = require "./validation.coffee"
 
 { qsa, extend, processSelector } = require "./utilities.coffee"
 
@@ -61,16 +61,18 @@ Factory = ( element, options = {} ) ->
 
   new ControlCollection( controls, options )
 
+Factory._validations = validationFunctions
 
 Factory.addValidation = ( key, val ) ->
-  return false if validation[ key ]
+  return false if @_validation[ key ]
   if val instanceof RegExp
     fn = ( str ) ->
       val.match str
   else if val instanceof Function
     fn = val
+  @_validation[ key ] = fn
 
-  validation[ key ] = fn
+
 
 Factory.BaseControl = BaseControl
 Factory.SelectControl = SelectControl

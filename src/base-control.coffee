@@ -1,6 +1,4 @@
-util = require "./utilities.coffee"
-
-extend = util.extend
+{ extend } = require "./utilities.coffee"
 
 defaults = 
   identifyingAttribute: "id"

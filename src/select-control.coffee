@@ -5,16 +5,16 @@ filter = utilities.filter
 class SelectControl extends BaseControl
 
   value : ->
-    results = []
-    for option in this.selected()
-      if option.value then results.push( option.value )
-    return results
-
+    sel = @selected()
+    return unless sel.length
+    if sel.length > 1
+      return sel.map ( opt ) -> opt.value
+    else
+      return sel[0].value
 
   selected : ->
-    filter this.el.children, ( opt ) ->
-      return opt.tagName.toLowerCase() is "option" and opt.selected and opt.value and not opt.disabled
-
+    filter @el.options, ( opt ) ->
+      opt.selected and not opt.disabled
 
   valid : ->
     !!@value().length

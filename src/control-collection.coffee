@@ -18,21 +18,17 @@ class ControlCollection extends Array
         return "controlCollection#{ counter }"
 
   constructor: ( components, options ) ->
-    controls = []
     @collections = {}
     for component in components
       if component instanceof ControlCollection
         @collections[ component.id ] = component
-        [].push.apply( @, component )
+        @push.apply( @, component )
       else
-        @push component
+        @push( component )
+    @els = @map ( c ) -> c.el
 
     settings = extend( {}, ControlCollection.defaults(), options )
     @id = settings.id
-    if settings.valid
-      if typeof settings.valid is "string"
-        @valid = ->
-          validation[ settings.valid ]( @el.value )
 
   # Should be set to either "valueAsObject" or "valueAsArray"
   # Setting this property with the options object in the constructor
@@ -86,6 +82,11 @@ class ControlCollection extends Array
     if param then @ else m
 
 
+  clear : ->
+    component.clear() for component in @
+    @
+
+
   # For ::valid, we want to check any sub-collections of this collection
   # for validity AS A GROUP. Sub-collections can have custom validity
   # rules, so the collection might be valid even if it has invalid components.
@@ -107,24 +108,27 @@ class ControlCollection extends Array
 
     return collectionsValid and singlesValid
 
-
-  on : ( eventType, handler ) ->
-    handler = handler.bind( @ )
-    for component in @
-      component.on( eventType, handler )
-    @
-
-
-  off : ->
-    for component in @
-      component.off( arguments )
-    @
+  # Listens for events on the Collection's controls
+  # Returns the listener so it can be saved and later removed.
+  addEventListener : ( eventType, handler, context = @ ) ->
+    fn = ( event ) =>
+      if event.target in @els
+        if context is "target" then context = event.target
+        else if context is "control" then context = @find el: event.target
+        handler.call( context, event )
+    document.addEventListener( eventType, fn )
+    fn
 
 
-  trigger : ( eventType ) ->
-    for component in @
-      component.trigger( eventType )
-    @
+  removeEventListener : ( eventType, handler ) ->
+    document.removeEventListener( eventType, handler )
+
+
+  dispatchEvent : ( event ) ->
+    if typeof event is "string"
+      event = new Event( event )
+    el.dispatchEvent( event ) for el in @els
+
 
   # can combine where and find functionality into one method
   # where and find operate like their Underscore analogs.

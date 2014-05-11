@@ -44,19 +44,31 @@ class BaseControl
       return true
 
 
-  on : ( eventType, handler ) ->
+  clear : ( squelchEvent ) ->
+    if @el.value
+      @el.value = ""
+      @dispatchEvent "change"
+      
+
+
+  addEventListener : ( eventType, handler ) ->
+    handler = handler.bind( @ )
     @el.addEventListener eventType, handler
-    return @
+    handler
+    
 
-
-  off : ( handler ) ->
+  removeEventListener : ( eventType, handler ) ->
     @el.removeEventListener handler
-    return @
 
 
-  trigger : ( eventType ) ->
-    @el.dispatchEvent new CustomEvent eventType
-    return @
+  dispatchEvent : ( evt ) ->
+    if typeof evt is "string"
+      evt = new Event evt,
+        bubbles: true
+    if evt instanceof Event
+      @el.dispatchEvent evt
+    else
+      throw new TypeError "Pass a string or Event object to dispatchEvent!"
 
 
 module.exports = BaseControl

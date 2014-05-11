@@ -363,13 +363,17 @@
 
       window.masterCollection = Controls( collections );
 
-      checkboxCollection.on( "change", function( event ) {
-        console.log( event )
-      });
-
-      masterCollection.on( "change", function( event ) {
+      masterCollection.addEventListener( "change", function( event ) {
         Log.print( JSON.stringify( this.value() ).replace(/,/g, ",\n") );
       });
+
+      radioCollection.addEventListener( "change", function( event ) {
+        console.log( this );
+      }, "target");
+
+      checkboxCollection.addEventListener( "change", function( event ) {
+        console.log( this );
+      }, "control");
 
 
 

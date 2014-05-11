@@ -1,4 +1,4 @@
-validations = 
+controlValidations = 
 
   notEmpty : ->
     ( str ) -> !!str
@@ -23,7 +23,7 @@ validations =
       str is value
 
   email : do ->
-    i = document.createElement "input"
+    i = document.createElement( "input" )
     i.type = "email"
     ->
       ( str ) ->
@@ -67,6 +67,23 @@ validations =
     validations.lengthBetween( min, Number.POSITIVE_INFINITY )
 
 
+collectionValidations =
+
+  allValid: ->
+    @every ( control ) -> control.valid()
+
+  allChecked: ->
+    @every ( control ) -> control.el.checked
+
+  anyChecked: ->
+    @some ( control ) -> control.el.checked
+
+  allHaveSelected: ->
+    @every ( control ) -> control.selected().legnth
+
+  anyHaveSelected: ->
+    @some ( control ) -> control.selected().length
 
 
-module.exports = validations
+
+module.exports = controlValidations

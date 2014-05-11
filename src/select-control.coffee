@@ -1,6 +1,5 @@
 BaseControl = require "./base-control.coffee"
-utilities = require "./utilities.coffee"
-filter = utilities.filter
+{ filter, each } = require "./utilities.coffee"
 
 class SelectControl extends BaseControl
 
@@ -8,15 +7,21 @@ class SelectControl extends BaseControl
     sel = @selected()
     return unless sel.length
     if sel.length > 1
-      return sel.map ( opt ) -> opt.value
+      return sel.map ( option ) -> option.value
     else
       return sel[0].value
 
   selected : ->
-    filter @el.options, ( opt ) ->
-      opt.selected and not opt.disabled
+    filter @el.options, ( option ) ->
+      option.selected and not option.disabled
 
   valid : ->
     !!@value().length
+
+  clear : ->
+    if selected().length
+      each @el.options, ( option ) ->
+        option.selected = false
+      @dispatchEvent "change"
 
 module.exports = SelectControl

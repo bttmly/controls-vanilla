@@ -58,19 +58,34 @@ BaseControl = (function() {
     }
   };
 
-  BaseControl.prototype.on = function(eventType, handler) {
+  BaseControl.prototype.clear = function(squelchEvent) {
+    if (this.el.value) {
+      this.el.value = "";
+      return this.dispatchEvent("change");
+    }
+  };
+
+  BaseControl.prototype.addEventListener = function(eventType, handler) {
+    handler = handler.bind(this);
     this.el.addEventListener(eventType, handler);
-    return this;
+    return handler;
   };
 
-  BaseControl.prototype.off = function(handler) {
-    this.el.removeEventListener(handler);
-    return this;
+  BaseControl.prototype.removeEventListener = function(eventType, handler) {
+    return this.el.removeEventListener(handler);
   };
 
-  BaseControl.prototype.trigger = function(eventType) {
-    this.el.dispatchEvent(new CustomEvent(eventType));
-    return this;
+  BaseControl.prototype.dispatchEvent = function(evt) {
+    if (typeof evt === "string") {
+      evt = new Event(evt, {
+        bubbles: true
+      });
+    }
+    if (evt instanceof Event) {
+      return this.el.dispatchEvent(evt);
+    } else {
+      throw new TypeError("Pass a string or Event object to dispatchEvent!");
+    }
   };
 
   return BaseControl;
@@ -134,6 +149,22 @@ CheckableControl = (function(_super) {
     }
   };
 
+  CheckableControl.prototype.checked = function(param) {
+    var initial;
+    initial = this.el.checked;
+    if ((param != null) && param !== initial) {
+      this.el.checked = param;
+      this.dispatchEvent("change");
+    }
+    return this.el.checked;
+  };
+
+  CheckableControl.prototype.clear = function() {
+    if (this.checked()) {
+      return this.checked(false);
+    }
+  };
+
   return CheckableControl;
 
 })(BaseControl);
@@ -168,27 +199,22 @@ ControlCollection = (function(_super) {
   })();
 
   function ControlCollection(components, options) {
-    var component, controls, settings, _i, _len;
-    controls = [];
+    var component, settings, _i, _len;
     this.collections = {};
     for (_i = 0, _len = components.length; _i < _len; _i++) {
       component = components[_i];
       if (component instanceof ControlCollection) {
         this.collections[component.id] = component;
-        [].push.apply(this, component);
+        this.push.apply(this, component);
       } else {
         this.push(component);
       }
     }
+    this.els = this.map(function(c) {
+      return c.el;
+    });
     settings = extend({}, ControlCollection.defaults(), options);
     this.id = settings.id;
-    if (settings.valid) {
-      if (typeof settings.valid === "string") {
-        this.valid = function() {
-          return validation[settings.valid](this.el.value);
-        };
-      }
-    }
   }
 
   ControlCollection.prototype.defaultValue = "valueAsObject";
@@ -271,6 +297,15 @@ ControlCollection = (function(_super) {
     }
   };
 
+  ControlCollection.prototype.clear = function() {
+    var component, _i, _len;
+    for (_i = 0, _len = this.length; _i < _len; _i++) {
+      component = this[_i];
+      component.clear();
+    }
+    return this;
+  };
+
   ControlCollection.prototype.valid = function() {
     var checkedInSubCollection, collectionsValid, control, singlesValid, _i, _len;
     checkedInSubCollection = [];
@@ -294,32 +329,46 @@ ControlCollection = (function(_super) {
     return collectionsValid && singlesValid;
   };
 
-  ControlCollection.prototype.on = function(eventType, handler) {
-    var component, _i, _len;
-    handler = handler.bind(this);
-    for (_i = 0, _len = this.length; _i < _len; _i++) {
-      component = this[_i];
-      component.on(eventType, handler);
+  ControlCollection.prototype.addEventListener = function(eventType, handler, context) {
+    var fn;
+    if (context == null) {
+      context = this;
     }
-    return this;
+    fn = (function(_this) {
+      return function(event) {
+        var _ref1;
+        if (_ref1 = event.target, __indexOf.call(_this.els, _ref1) >= 0) {
+          if (context === "target") {
+            context = event.target;
+          } else if (context === "control") {
+            context = _this.find({
+              el: event.target
+            });
+          }
+          return handler.call(context, event);
+        }
+      };
+    })(this);
+    document.addEventListener(eventType, fn);
+    return fn;
   };
 
-  ControlCollection.prototype.off = function() {
-    var component, _i, _len;
-    for (_i = 0, _len = this.length; _i < _len; _i++) {
-      component = this[_i];
-      component.off(arguments);
-    }
-    return this;
+  ControlCollection.prototype.removeEventListener = function(eventType, handler) {
+    return document.removeEventListener(eventType, handler);
   };
 
-  ControlCollection.prototype.trigger = function(eventType) {
-    var component, _i, _len;
-    for (_i = 0, _len = this.length; _i < _len; _i++) {
-      component = this[_i];
-      component.trigger(eventType);
+  ControlCollection.prototype.dispatchEvent = function(event) {
+    var el, _i, _len, _ref1, _results;
+    if (typeof event === "string") {
+      event = new Event(event);
     }
-    return this;
+    _ref1 = this.els;
+    _results = [];
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      el = _ref1[_i];
+      _results.push(el.dispatchEvent(event));
+    }
+    return _results;
   };
 
   ControlCollection.prototype.where = function(obj) {
@@ -478,15 +527,13 @@ module.exports = Factory;
 
 
 },{"./base-control.coffee":1,"./button-control.coffee":2,"./checkable-control.coffee":3,"./control-collection.coffee":4,"./select-control.coffee":7,"./utilities.coffee":8,"./validation.coffee":9}],7:[function(require,module,exports){
-var BaseControl, SelectControl, filter, utilities,
+var BaseControl, SelectControl, each, filter, _ref,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 BaseControl = require("./base-control.coffee");
 
-utilities = require("./utilities.coffee");
-
-filter = utilities.filter;
+_ref = require("./utilities.coffee"), filter = _ref.filter, each = _ref.each;
 
 SelectControl = (function(_super) {
   __extends(SelectControl, _super);
@@ -502,8 +549,8 @@ SelectControl = (function(_super) {
       return;
     }
     if (sel.length > 1) {
-      return sel.map(function(opt) {
-        return opt.value;
+      return sel.map(function(option) {
+        return option.value;
       });
     } else {
       return sel[0].value;
@@ -511,13 +558,22 @@ SelectControl = (function(_super) {
   };
 
   SelectControl.prototype.selected = function() {
-    return filter(this.el.options, function(opt) {
-      return opt.selected && !opt.disabled;
+    return filter(this.el.options, function(option) {
+      return option.selected && !option.disabled;
     });
   };
 
   SelectControl.prototype.valid = function() {
     return !!this.value().length;
+  };
+
+  SelectControl.prototype.clear = function() {
+    if (selected().length) {
+      each(this.el.options, function(option) {
+        return option.selected = false;
+      });
+      return this.dispatchEvent("change");
+    }
   };
 
   return SelectControl;
@@ -646,10 +702,10 @@ module.exports = {
 
 
 },{}],9:[function(require,module,exports){
-var validations,
+var collectionValidations, controlValidations,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-validations = {
+controlValidations = {
   notEmpty: function() {
     return function(str) {
       return !!str;
@@ -745,7 +801,35 @@ validations = {
   }
 };
 
-module.exports = validations;
+collectionValidations = {
+  allValid: function() {
+    return this.every(function(control) {
+      return control.valid();
+    });
+  },
+  allChecked: function() {
+    return this.every(function(control) {
+      return control.el.checked;
+    });
+  },
+  anyChecked: function() {
+    return this.some(function(control) {
+      return control.el.checked;
+    });
+  },
+  allHaveSelected: function() {
+    return this.every(function(control) {
+      return control.selected().legnth;
+    });
+  },
+  anyHaveSelected: function() {
+    return this.some(function(control) {
+      return control.selected().length;
+    });
+  }
+};
+
+module.exports = controlValidations;
 
 
 },{}]},{},[5])

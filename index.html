@@ -271,7 +271,7 @@
         <input id="last-name-input" type="text" placeholder="Last name">
       </div>
 
-      <div class="control-wrapper">
+      <div class="control-wrapper" id="button-wrapper">
         <button id="button-control">Control Button</button>
       </div>
 
@@ -350,13 +350,16 @@
 
       window.multiSelectCollection = Controls( "#multi-select-wrapper" );
 
+      window.buttonCollection = Controls( "#button-wrapper" );
+
       var collections = [
         textCollection,
         checkboxCollection,
         radioCollection,
         textFieldsCollection,
         singleSelectCollection,
-        multiSelectCollection
+        multiSelectCollection,
+        buttonCollection
       ]
 
       window.masterCollection = Controls( collections );

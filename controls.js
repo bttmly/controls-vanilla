@@ -117,7 +117,7 @@ ButtonControl = (function(_super) {
   __extends(ButtonControl, _super);
 
   function ButtonControl() {
-    ButtonControl.__super__.constructor.call(this, arguments);
+    ButtonControl.__super__.constructor.apply(this, arguments);
     this.el.type = "button";
     this.type = "button";
   }

@@ -7,7 +7,7 @@ fs = require( "fs" )
 
 task "build", "Build project.", ->
   b = browserify [ "./src/controls.coffee" ]
-  b.transform "coffeeify"
+  b.transform( coffeeify )
   b.bundle ( err, src ) ->
     throw err if err
     fs.writeFile "./controls.js", src, ( err ) ->

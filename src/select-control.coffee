@@ -12,7 +12,7 @@ class SelectControl extends BaseControl
       option.selected and not option.disabled
 
   valid : ->
-    !!@value().length
+    !!@value()
 
   clear : ->
     if @selected().length

@@ -126,6 +126,10 @@ ButtonControl = (function(_super) {
     return false;
   };
 
+  ButtonControl.prototype.valid = function() {
+    return true;
+  };
+
   return ButtonControl;
 
 })(BaseControl);
@@ -500,12 +504,12 @@ Factory = function(element, options) {
     each(element, function(el) {
       var _ref2;
       if ((el instanceof BaseControl) || (el instanceof ControlCollection) || (el instanceof Element && (_ref2 = el.tagName.toLowerCase(), __indexOf.call(controlTags, _ref2) >= 0))) {
-        return [].push.apply(components, el);
+        return components.push(el);
       }
     });
   }
   controls = components.map(function(item) {
-    if (!(item instanceof BaseControl)) {
+    if (item instanceof Element) {
       item = buildControl(item);
     }
     return item;
@@ -572,7 +576,7 @@ SelectControl = (function(_super) {
   };
 
   SelectControl.prototype.valid = function() {
-    return !!this.value().length;
+    return !!this.value();
   };
 
   SelectControl.prototype.clear = function() {

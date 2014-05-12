@@ -4,3 +4,5 @@ TODO
 - [ ] Map validations to Control types
 - [ ] Mechanism for adding validations
 - [ ] Enable validation composition
+
+- [ ] .data() method a la jQuery

@@ -49,11 +49,11 @@ Factory = ( element, options = {} ) ->
   else if element.length?
     each element, ( el ) ->
       if ( el instanceof BaseControl ) or ( el instanceof ControlCollection ) or ( el instanceof Element and el.tagName.toLowerCase() in controlTags )
-        [].push.apply( components, el )
+        components.push( el )
 
   # map components into Control instances 
   controls = components.map ( item ) ->
-    item = buildControl( item ) unless item instanceof BaseControl
+    item = buildControl( item ) if item instanceof Element
     item
 
   new ControlCollection( controls, options )

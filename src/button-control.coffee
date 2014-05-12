@@ -9,4 +9,6 @@ class ButtonControl extends BaseControl
 
   value : -> false
 
+  valid : -> true
+
 module.exports = ButtonControl

@@ -1,37 +1,38 @@
-{ extend } = require "./utilities.coffee"
+{ extend, slice } = require "./utilities.coffee"
 
 defaults = 
   identifyingAttribute: "id"
 
+
+getLabel = do ->
+  labels = document.getElementsByTagName( "input" )
+  ( el ) ->
+    for label in labels
+      return label if label.control is el
+
+
 class BaseControl
   constructor: ( el, options = {} ) ->
+    return false unless el instanceof Element
     settings = extend( {}, defaults, options )
-    unless el instanceof Element
-      console.log el
     @el = el
-    @id = el.getAttribute settings.identifyingAttribute
+    @id = el.getAttribute( settings.identifyingAttribute )
     @type = el.type or el.tagName.toLowerCase()
     @tag = el.tagName.toLowerCase()
+
 
   required : ( param ) ->
     if param?
       @el.required = !!param
       return @
-    else
-      return @el.required
+    return @el.required
 
 
   disabled : ( param ) ->
     if param?
       @el.disabled = !!param
       return @
-    else
-      return @el.disabled
-
-
-  checked : -> undefined
-
-  selected : -> undefined
+    return @el.disabled
 
 
   value : ( param ) ->
@@ -42,6 +43,12 @@ class BaseControl
       return @el.value
 
 
+  checked : -> undefined
+
+
+  selected : -> undefined
+
+
   valid : ->
     if @el.checkValidity
       return @el.checkValidity()
@@ -49,20 +56,20 @@ class BaseControl
       return true
 
 
-  clear : ( squelchEvent ) ->
+  clear : ->
     if @el.value
       @el.value = ""
-      @dispatchEvent "change"
+      @dispatchEvent( "change" )
       
 
   addEventListener : ( eventType, handler ) ->
-    handler = handler.bind( @ )
-    @el.addEventListener eventType, handler
-    handler
+    fn = handler.bind( @ )
+    @el.addEventListener( eventType, fn )
+    fn
     
 
   removeEventListener : ( eventType, handler ) ->
-    @el.removeEventListener handler
+    @el.removeEventListener eventType, handler
 
 
   dispatchEvent : ( evt ) ->
@@ -70,9 +77,9 @@ class BaseControl
       evt = new Event evt,
         bubbles: true
     if evt instanceof Event
-      @el.dispatchEvent evt
+      @el.dispatchEvent( evt )
     else
-      throw new TypeError "Pass a string or Event object to dispatchEvent!"
+      throw new TypeError( "Pass a string or Event object to dispatchEvent!" )
 
 
 module.exports = BaseControl

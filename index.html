@@ -46,12 +46,9 @@
     select {
       -webkit-appearance: none;
       border: 1px solid slategray;
-      outline: 8px solid transparent;
-      -webkit-transition: outline .25s ease-in-out;
-      transition: outline .25s ease-in-out;
-/*      box-shadow: 0 0 0 .5em transparent;
+      box-shadow: 0 0 0 .5em transparent;
       -webkit-transition: box-shadow .25s ease-in-out;
-      transition: box-shadow .25s ease-in-out;*/
+      transition: box-shadow .25s ease-in-out;
     }
     input[type="text"]:focus,
     input[type="radio"]:focus,
@@ -59,8 +56,8 @@
     input[type="button"]:focus,
     button:focus,
     select:focus {
-      outline: 3px solid slategray;
-      /*box-shadow: 0 0 0 2px slategray;*/
+      outline: none;
+      box-shadow: 0 0 0 2px slategray;
     }
 
     input[type="text"],
@@ -81,8 +78,8 @@
 
     input[type="checkbox"],
     input[type="radio"] {
-      -webkit-transition-property: background, outline;
-      transition-property: background, outline;
+      -webkit-transition-property: background, box-shadow;
+      transition-property: background, box-shadow;
     }
 
     input[type="checkbox"] {
@@ -92,11 +89,12 @@
     }
 
     input[type="radio"] {
-      width: .75em;
-      height: .75em;
+      width: 1em;
+      height: 1em;
+      border-radius: 50%;
       position: relative;
-      top: 2px;
-      -webkit-transform: rotateZ(45deg);
+      top: .25em;
+      /*-webkit-transform: rotateZ(45deg);*/
     }
 
     input[type="radio"]:checked,
@@ -247,7 +245,7 @@
       </div>
 
       <div class="control-wrapper" id="single-select-wrapper">
-        <p>Single select.</p>
+        <label for="single-select">Single select</label>
         <select id="single-select">
           <option selected disabled>Pick one...</option>
           <option value="10-year">10 year</option>
@@ -257,7 +255,7 @@
       </div>
 
       <div class="control-wrapper" id="multi-select-wrapper">
-        <p>Multiple select.</p>
+        <label for="multi-select">Multi select</label>
         <select multiple id="multi-select" required>
           <option disabled>Pick some...</option>
           <option value="first">One Thing</option>
@@ -367,13 +365,11 @@
         Log.print( JSON.stringify( this.value() ).replace(/,/g, ",\n") );
       });
 
-      radioCollection.addEventListener( "change", function( event ) {
-        console.log( this );
-      }, "target");
+      // radioCollection.addEventListener( "change", function( event ) {
+      // }, "target");
 
-      checkboxCollection.addEventListener( "change", function( event ) {
-        console.log( this );
-      }, "control");
+      // checkboxCollection.addEventListener( "change", function( event ) {
+      // }, "control");
 
 
 

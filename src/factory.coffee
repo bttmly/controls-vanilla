@@ -4,7 +4,6 @@ ButtonControl = require "./button-control.coffee"
 CheckableControl = require "./checkable-control.coffee"
 ControlCollection = require "./control-collection.coffee"
 validationFunctions = require "./validation.coffee"
-
 { qsa, extend, processSelector, each } = require "./utilities.coffee"
 
 controlTags = [ "input", "select", "button", "textarea" ]

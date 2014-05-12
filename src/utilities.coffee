@@ -17,14 +17,16 @@ qsa = ->
     selector = arguments[0]
   slice el.querySelectorAll selector
 
-slice = ( arr, args... ) ->
-  Array::slice.apply( arr, args )
+map = Function::call.bind( Array::map )
+some = Function::call.bind( Array::some )
+slice = Function::call.bind( Array::slice )
+filter = Function::call.bind( Array::filter )
 
-filter = ( arr, cb ) ->
-  Array::filter.call( arr, cb )
-
-map = ( arr, cb ) ->
-  Array::map.call( arr, cb )
+find = ( arr, test ) ->
+  result = undefined
+  some arr, ( value, index, list ) ->
+    result = value if test( value, index, list )
+  result
 
 each = ( obj, itr ) ->
   list = if Array.isArray( obj ) then obj.map ( e, i ) ->  i else Object.keys( obj )
@@ -32,6 +34,7 @@ each = ( obj, itr ) ->
   while i < list.length
     itr( obj[ list[i] ], list[ i ], obj )
     i += 1
+  return
 
 # https://gist.github.com/vjt/827679
 camelize = ( str ) ->
@@ -59,16 +62,19 @@ isEmpty = ( obj ) ->
 
 
 module.exports = 
-  extend : extend
-  qsa : qsa
-  slice : slice
-  filter : filter
-  each : each
-  camelize : camelize
-  processSelector : processSelector
-  mapAllTrue : mapAllTrue
-  mapToObj : mapToObj
-  isEmpty : isEmpty
+  qsa: qsa  
+  map: map
+  some: some
+  each: each
+  find: find
+  slice: slice
+  filter: filter
+  extend: extend
+  camelize: camelize
+  processSelector: processSelector
+  mapAllTrue: mapAllTrue
+  mapToObj: mapToObj
+  isEmpty: isEmpty
 
 
 

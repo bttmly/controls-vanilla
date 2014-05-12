@@ -1,11 +1,25 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var BaseControl, defaults, extend;
+var BaseControl, defaults, extend, getLabel, slice, _ref;
 
-extend = require("./utilities.coffee").extend;
+_ref = require("./utilities.coffee"), extend = _ref.extend, slice = _ref.slice;
 
 defaults = {
   identifyingAttribute: "id"
 };
+
+getLabel = (function() {
+  var labels;
+  labels = document.getElementsByTagName("input");
+  return function(el) {
+    var label, _i, _len;
+    for (_i = 0, _len = labels.length; _i < _len; _i++) {
+      label = labels[_i];
+      if (label.control === el) {
+        return label;
+      }
+    }
+  };
+})();
 
 BaseControl = (function() {
   function BaseControl(el, options) {
@@ -13,10 +27,10 @@ BaseControl = (function() {
     if (options == null) {
       options = {};
     }
-    settings = extend({}, defaults, options);
     if (!(el instanceof Element)) {
-      console.log(el);
+      return false;
     }
+    settings = extend({}, defaults, options);
     this.el = el;
     this.id = el.getAttribute(settings.identifyingAttribute);
     this.type = el.type || el.tagName.toLowerCase();
@@ -27,26 +41,16 @@ BaseControl = (function() {
     if (param != null) {
       this.el.required = !!param;
       return this;
-    } else {
-      return this.el.required;
     }
+    return this.el.required;
   };
 
   BaseControl.prototype.disabled = function(param) {
     if (param != null) {
       this.el.disabled = !!param;
       return this;
-    } else {
-      return this.el.disabled;
     }
-  };
-
-  BaseControl.prototype.checked = function() {
-    return void 0;
-  };
-
-  BaseControl.prototype.selected = function() {
-    return void 0;
+    return this.el.disabled;
   };
 
   BaseControl.prototype.value = function(param) {
@@ -58,6 +62,14 @@ BaseControl = (function() {
     }
   };
 
+  BaseControl.prototype.checked = function() {
+    return void 0;
+  };
+
+  BaseControl.prototype.selected = function() {
+    return void 0;
+  };
+
   BaseControl.prototype.valid = function() {
     if (this.el.checkValidity) {
       return this.el.checkValidity();
@@ -66,7 +78,7 @@ BaseControl = (function() {
     }
   };
 
-  BaseControl.prototype.clear = function(squelchEvent) {
+  BaseControl.prototype.clear = function() {
     if (this.el.value) {
       this.el.value = "";
       return this.dispatchEvent("change");
@@ -74,13 +86,14 @@ BaseControl = (function() {
   };
 
   BaseControl.prototype.addEventListener = function(eventType, handler) {
-    handler = handler.bind(this);
-    this.el.addEventListener(eventType, handler);
-    return handler;
+    var fn;
+    fn = handler.bind(this);
+    this.el.addEventListener(eventType, fn);
+    return fn;
   };
 
   BaseControl.prototype.removeEventListener = function(eventType, handler) {
-    return this.el.removeEventListener(handler);
+    return this.el.removeEventListener(eventType, handler);
   };
 
   BaseControl.prototype.dispatchEvent = function(evt) {
@@ -344,16 +357,18 @@ ControlCollection = (function(_super) {
     }
     fn = (function(_this) {
       return function(event) {
-        var _ref1;
+        var t, _ref1;
         if (_ref1 = event.target, __indexOf.call(_this.els, _ref1) >= 0) {
           if (context === "target") {
-            context = event.target;
+            t = event.target;
           } else if (context === "control") {
-            context = _this.find({
+            t = _this.find({
               el: event.target
             });
+          } else {
+            t = context;
           }
-          return handler.call(context, event);
+          return handler.call(t, event);
         }
       };
     })(this);
@@ -596,9 +611,8 @@ module.exports = SelectControl;
 
 
 },{"./base-control.coffee":1,"./utilities.coffee":8}],8:[function(require,module,exports){
-var camelize, each, extend, filter, isEmpty, map, mapAllTrue, mapToObj, processSelector, qsa, slice,
-  __hasProp = {}.hasOwnProperty,
-  __slice = [].slice;
+var camelize, each, extend, filter, find, isEmpty, map, mapAllTrue, mapToObj, processSelector, qsa, slice, some,
+  __hasProp = {}.hasOwnProperty;
 
 extend = function(out) {
   var i, key, _ref;
@@ -630,32 +644,35 @@ qsa = function() {
   return slice(el.querySelectorAll(selector));
 };
 
-slice = function() {
-  var args, arr;
-  arr = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-  return Array.prototype.slice.apply(arr, args);
-};
+map = Function.prototype.call.bind(Array.prototype.map);
 
-filter = function(arr, cb) {
-  return Array.prototype.filter.call(arr, cb);
-};
+some = Function.prototype.call.bind(Array.prototype.some);
 
-map = function(arr, cb) {
-  return Array.prototype.map.call(arr, cb);
+slice = Function.prototype.call.bind(Array.prototype.slice);
+
+filter = Function.prototype.call.bind(Array.prototype.filter);
+
+find = function(arr, test) {
+  var result;
+  result = void 0;
+  some(arr, function(value, index, list) {
+    if (test(value, index, list)) {
+      return result = value;
+    }
+  });
+  return result;
 };
 
 each = function(obj, itr) {
-  var i, list, _results;
+  var i, list;
   list = Array.isArray(obj) ? obj.map(function(e, i) {
     return i;
   }) : Object.keys(obj);
   i = 0;
-  _results = [];
   while (i < list.length) {
     itr(obj[list[i]], list[i], obj);
-    _results.push(i += 1);
+    i += 1;
   }
-  return _results;
 };
 
 camelize = function(str) {
@@ -700,11 +717,14 @@ isEmpty = function(obj) {
 };
 
 module.exports = {
-  extend: extend,
   qsa: qsa,
+  map: map,
+  some: some,
+  each: each,
+  find: find,
   slice: slice,
   filter: filter,
-  each: each,
+  extend: extend,
   camelize: camelize,
   processSelector: processSelector,
   mapAllTrue: mapAllTrue,

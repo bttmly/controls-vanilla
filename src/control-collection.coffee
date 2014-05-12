@@ -114,9 +114,13 @@ class ControlCollection extends Array
   addEventListener : ( eventType, handler, context = @ ) ->
     fn = ( event ) =>
       if event.target in @els
-        if context is "target" then context = event.target
-        else if context is "control" then context = @find el: event.target
-        handler.call( context, event )
+        if context is "target"
+          t = event.target
+        else if context is "control"
+          t = @find el: event.target
+        else
+          t = context
+        handler.call( t, event )
     document.addEventListener( eventType, fn )
     fn
 

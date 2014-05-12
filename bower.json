@@ -1,19 +1,23 @@
 {
-  "name": "controls.js",
+  "name": "controls",
   "main": "controls.js",
-  "version": "0.1.0",
-  "homepage": "https://github.com/nickb1080/controls.js",
+  "version": "0.0.0",
+  "homepage": "https://github.co/nickb1080/controls",
   "authors": [
     "Nick Bottomley <nhbottomley@gmail.com>"
   ],
-  "description": "Manipulate control elements w/ JS",
+  "description": "Wrapper classes for control elements and collections",
   "moduleType": [
-    "globals",
+    "globals"
   ],
   "keywords": [
-    "input",
     "form",
-    "control"
+    "control",
+    "user",
+    "input",
+    "user",
+    "interface",
+    "input"
   ],
   "license": "MIT",
   "ignore": [

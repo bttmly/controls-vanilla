@@ -266,9 +266,9 @@
 
       <div class="control-wrapper hash-test" id="text-fields-wrapper">
         <p>Text input group w/ values as hash.</p>
-        <input id="email-input" type="text" placeholder="Email address">
-        <input id="first-name-input" type="text" placeholder="First name">
-        <input id="last-name-input" type="text" placeholder="Last name">
+        <input id="email-input" type="text" placeholder="Email address" data-control-validation="email">
+        <input id="first-name-input" type="text" placeholder="First name" data-control-validation="letters">
+        <input id="age-input" type="text" placeholder="Last name" data-control-validation="numeric">
       </div>
 
       <div class="control-wrapper" id="button-wrapper">
@@ -336,11 +336,11 @@
       });
 
       window.textFieldsCollection = Controls( "#text-fields-wrapper", {
-        valid : function() {
-          return allTrue( this.map( function( item ) {
-            return item.value().trim().length
-          }));
-        }
+        // valid : function() {
+        //   return allTrue( this.map( function( item ) {
+        //     return item.value().trim().length
+        //   }));
+        // }
       });
 
       window.singleSelectCollection = Controls( "#single-select-wrapper" );

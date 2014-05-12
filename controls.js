@@ -1,7 +1,11 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var BaseControl, defaults, extend, slice, _ref;
+var BaseControl, defaults, extend, slice, validations, _ref;
 
 _ref = require("./utilities.coffee"), extend = _ref.extend, slice = _ref.slice;
+
+validations = function() {
+  return require("./factory.coffee")._validations.controlValidations;
+};
 
 defaults = {
   identifyingAttribute: "id"
@@ -9,7 +13,7 @@ defaults = {
 
 BaseControl = (function() {
   function BaseControl(el, options) {
-    var settings;
+    var settings, vname;
     if (options == null) {
       options = {};
     }
@@ -21,6 +25,11 @@ BaseControl = (function() {
     this.id = el.getAttribute(settings.identifyingAttribute);
     this.type = el.type || el.tagName.toLowerCase();
     this.tag = el.tagName.toLowerCase();
+    if (settings.valid) {
+      this.valid = settings.valid;
+    } else if ((vname = this.data("controlValidation")) in validations()) {
+      this.valid = validations()[vname]();
+    }
   }
 
   BaseControl.prototype.required = function(param) {
@@ -48,13 +57,9 @@ BaseControl = (function() {
     }
   };
 
-  BaseControl.prototype.checked = function() {
-    return void 0;
-  };
+  BaseControl.prototype.checked = function() {};
 
-  BaseControl.prototype.selected = function() {
-    return void 0;
-  };
+  BaseControl.prototype.selected = function() {};
 
   BaseControl.prototype.valid = function() {
     if (this.el.checkValidity) {
@@ -69,6 +74,10 @@ BaseControl = (function() {
       this.el.value = "";
       return this.dispatchEvent("change");
     }
+  };
+
+  BaseControl.prototype.labels = function() {
+    return this.el.labels;
   };
 
   BaseControl.prototype.label = function() {
@@ -99,6 +108,14 @@ BaseControl = (function() {
     }
   };
 
+  BaseControl.prototype.data = function(key, value) {
+    if (value) {
+      return this.el.dataset[key] = value;
+    } else {
+      return this.el.dataset[key];
+    }
+  };
+
   return BaseControl;
 
 })();
@@ -106,7 +123,7 @@ BaseControl = (function() {
 module.exports = BaseControl;
 
 
-},{"./utilities.coffee":8}],2:[function(require,module,exports){
+},{"./factory.coffee":6,"./utilities.coffee":8}],2:[function(require,module,exports){
 var BaseControl, ButtonControl,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -188,14 +205,16 @@ module.exports = CheckableControl;
 
 
 },{"./base-control.coffee":1}],4:[function(require,module,exports){
-var ControlCollection, each, extend, isEmpty, mapToObj, validation, _ref,
+var ControlCollection, each, extend, isEmpty, isFunction, mapToObj, validations, _ref,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-_ref = require("./utilities.coffee"), extend = _ref.extend, isEmpty = _ref.isEmpty, each = _ref.each, mapToObj = _ref.mapToObj;
+_ref = require("./utilities.coffee"), extend = _ref.extend, isEmpty = _ref.isEmpty, each = _ref.each, mapToObj = _ref.mapToObj, isFunction = _ref.isFunction;
 
-validation = require("./validation.coffee");
+validations = function() {
+  return require("./factory.coffee")._validations.collectionValidations;
+};
 
 ControlCollection = (function(_super) {
   __extends(ControlCollection, _super);
@@ -230,6 +249,12 @@ ControlCollection = (function(_super) {
     });
     settings = extend({}, ControlCollection.defaults(), options);
     this.id = settings.id;
+    if (settings.valid) {
+      this.valid = settings.valid;
+    }
+    if (settings.value) {
+      this.value = settings.value;
+    }
   }
 
   ControlCollection.prototype.defaultValue = "valueAsObject";
@@ -442,12 +467,12 @@ ControlCollection = (function(_super) {
 module.exports = ControlCollection;
 
 
-},{"./utilities.coffee":8,"./validation.coffee":9}],5:[function(require,module,exports){
+},{"./factory.coffee":6,"./utilities.coffee":8}],5:[function(require,module,exports){
 window.Controls = require("./factory.coffee");
 
 
 },{"./factory.coffee":6}],6:[function(require,module,exports){
-var BaseControl, ButtonControl, CheckableControl, ControlCollection, Factory, SelectControl, buildControl, controlTags, each, extend, processSelector, qsa, validationFunctions, _ref,
+var BaseControl, ButtonControl, CheckableControl, ControlCollection, Factory, SelectControl, buildControl, controlTags, each, extend, isFunction, processSelector, qsa, validationFunctions, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 BaseControl = require("./base-control.coffee");
@@ -462,7 +487,7 @@ ControlCollection = require("./control-collection.coffee");
 
 validationFunctions = require("./validation.coffee");
 
-_ref = require("./utilities.coffee"), qsa = _ref.qsa, extend = _ref.extend, processSelector = _ref.processSelector, each = _ref.each;
+_ref = require("./utilities.coffee"), qsa = _ref.qsa, extend = _ref.extend, processSelector = _ref.processSelector, each = _ref.each, isFunction = _ref.isFunction;
 
 controlTags = ["input", "select", "button", "textarea"];
 
@@ -519,19 +544,30 @@ Factory = function(element, options) {
 
 Factory._validations = validationFunctions;
 
-Factory.addValidation = function(key, val) {
+Factory.addControlValidation = function(key, val) {
   var fn;
-  if (this._validation[key]) {
+  if (this._validations.controlValidations[key]) {
     return false;
   }
   if (val instanceof RegExp) {
     fn = function(str) {
       return val.match(str);
     };
-  } else if (val instanceof Function) {
+  } else if (isFunction(val)) {
     fn = val;
   }
-  return this._validation[key] = fn;
+  return this._validations.controlValidations[key] = fn;
+};
+
+Factory.addCollectionValidation = function(key, val) {
+  var fn;
+  if (this._validations.collectionValidations[key]) {
+    return false;
+  }
+  if (isFunction(val)) {
+    fn = val;
+  }
+  return this._validations.collectionValidations[key] = fn;
 };
 
 Factory.BaseControl = BaseControl;
@@ -596,8 +632,31 @@ module.exports = SelectControl;
 
 
 },{"./base-control.coffee":1,"./utilities.coffee":8}],8:[function(require,module,exports){
-var camelize, each, extend, filter, find, isEmpty, map, mapAllTrue, mapOne, mapToObj, processSelector, qsa, slice, some,
+var camelize, each, extend, filter, find, isEmpty, isFunction, map, mapAllTrue, mapOne, mapToObj, processSelector, qsa, slice, some,
   __hasProp = {}.hasOwnProperty;
+
+({
+  type: (function() {
+    var classToType;
+    classToType = {
+      '[object Boolean]': 'boolean',
+      '[object Number]': 'number',
+      '[object String]': 'string',
+      '[object Function]': 'function',
+      '[object Array]': 'array',
+      '[object Date]': 'date',
+      '[object RegExp]': 'regexp',
+      '[object Object]': 'object'
+    };
+    return function(obj) {
+      if (obj != null) {
+        return classToType[Object.prototype.toString.call(obj)];
+      } else {
+        return String(obj);
+      }
+    };
+  })()
+});
 
 extend = function(out) {
   var i, key, _ref;
@@ -704,11 +763,18 @@ mapToObj = function(arr, fn) {
 };
 
 isEmpty = function(obj) {
-  if (Array.isArray(obj)) {
-    return !!obj.length;
-  } else {
-    return !!Object.keys(obj).length;
+  switch (type(obj)) {
+    case "array":
+      return !!obj.length;
+    case "object":
+      return !!Object.keys(obj).length;
+    default:
+      return !!obj;
   }
+};
+
+isFunction = function(obj) {
+  return type(obj === "function");
 };
 
 module.exports = {
@@ -725,7 +791,8 @@ module.exports = {
   processSelector: processSelector,
   mapAllTrue: mapAllTrue,
   mapToObj: mapToObj,
-  isEmpty: isEmpty
+  isEmpty: isEmpty,
+  isFunction: isFunction
 };
 
 
@@ -735,51 +802,58 @@ var collectionValidations, controlValidations,
 
 controlValidations = {
   notEmpty: function() {
-    return function(str) {
-      return !!str;
+    return function() {
+      return !!this.el.value;
     };
   },
   notEmptyTrim: function() {
-    return function(str) {
-      return !!str.trim();
+    return function() {
+      return !!this.el.value.trim();
     };
   },
   numeric: function() {
-    return function(str) {
-      return /^\d+$/.test(str);
+    return function() {
+      return /^\d+$/.test(this.el.value);
     };
   },
   alphanumeric: function() {
-    return function(str) {
-      return /^[a-z0-9]+$/i.test(str);
+    return function() {
+      return /^[a-z0-9]+$/i.test(this.el.value);
     };
   },
   letters: function() {
-    return function(str) {
-      return /^[a-z]+$/i.test(str);
+    return function() {
+      return /^[a-z]+$/i.test(this.el.value);
     };
   },
   isValue: function(value) {
-    return function(str) {
-      return str === value;
+    return function() {
+      return this.el.value === value;
     };
   },
-  email: (function() {
+  email: function() {
     var i;
     i = document.createElement("input");
     i.type = "email";
     return function() {
-      return function(str) {
-        i.value = str;
-        return i.validity.valid;
-      };
+      i.value = this.el.value;
+      return !!this.el.value && i.validity.valid;
     };
-  })(),
+  },
+  datalist: function() {
+    return function() {
+      var listValues, _ref;
+      listValues = map(this.el.list || [], function(option) {
+        return option.value;
+      });
+      return _ref = this.el.value, __indexOf.call(listValues, _ref) >= 0;
+    };
+  },
   allowed: function(allowedChars) {
     allowedChars = allowedChars.split("");
-    return function(str) {
-      var char, _i, _len;
-      str = str.split("");
+    return function() {
+      var char, str, _i, _len;
+      str = this.el.value.split("");
       for (_i = 0, _len = str.length; _i < _len; _i++) {
         char = str[_i];
         if (__indexOf.call(allowedChars, char) < 0) {
@@ -791,9 +865,9 @@ controlValidations = {
   },
   notAllowed: function(notAllowedChars) {
     notAllowedChars = notAllowedChars.split("");
-    return function(str) {
-      var char, _i, _len;
-      str = str.split("");
+    return function() {
+      var char, str, _i, _len;
+      str = this.el.value.split("");
       for (_i = 0, _len = notAllowedChars.length; _i < _len; _i++) {
         char = notAllowedChars[_i];
         if (__indexOf.call(notAllowedChars, char) >= 0) {
@@ -804,9 +878,9 @@ controlValidations = {
     };
   },
   numberBetween: function(min, max) {
-    return function(str) {
+    return function() {
       var _ref;
-      return (min <= (_ref = Number(str)) && _ref <= max);
+      return (min <= (_ref = Number(this.el.value)) && _ref <= max);
     };
   },
   numberMax: function(max) {
@@ -816,9 +890,9 @@ controlValidations = {
     return validations.between(min, Number.POSITIVE_INFINITY);
   },
   lengthBetween: function(min, max) {
-    return function(str) {
+    return function() {
       var _ref;
-      return (min <= (_ref = str.length) && _ref <= max);
+      return (min <= (_ref = this.el.value.length) && _ref <= max);
     };
   },
   lengthMax: function(max) {
@@ -832,6 +906,11 @@ controlValidations = {
 collectionValidations = {
   allValid: function() {
     return this.every(function(control) {
+      return control.valid();
+    });
+  },
+  anyValid: function() {
+    return this.some(function(control) {
       return control.valid();
     });
   },

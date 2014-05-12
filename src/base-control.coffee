@@ -1,8 +1,9 @@
 { extend, slice } = require "./utilities.coffee"
 
+validations = -> require( "./factory.coffee" )._validations.controlValidations
+
 defaults = 
   identifyingAttribute: "id"
-
 
 class BaseControl
   constructor: ( el, options = {} ) ->
@@ -12,6 +13,11 @@ class BaseControl
     @id = el.getAttribute( settings.identifyingAttribute )
     @type = el.type or el.tagName.toLowerCase()
     @tag = el.tagName.toLowerCase()
+
+    if settings.valid
+      @valid = settings.valid
+    else if ( vname = @data( "controlValidation" ) ) of validations()
+      @valid = validations()[vname]()
 
 
   required : ( param ) ->
@@ -36,10 +42,10 @@ class BaseControl
       return @el.value
 
 
-  checked : -> undefined
+  checked : ->
 
 
-  selected : -> undefined
+  selected : ->
 
 
   valid : ->
@@ -55,7 +61,8 @@ class BaseControl
       @dispatchEvent( "change" )
 
 
-  label : -> @el.labels[0]
+  labels: -> @el.labels
+  label: -> @el.labels[0]
       
 
   addEventListener : ( eventType, handler ) ->
@@ -76,6 +83,11 @@ class BaseControl
       @el.dispatchEvent( evt )
     else
       throw new TypeError( "Pass a string or Event object to dispatchEvent!" )
+
+
+  data : ( key, value ) ->
+    if value then @el.dataset[key] = value else @el.dataset[key]
+
 
 
 module.exports = BaseControl

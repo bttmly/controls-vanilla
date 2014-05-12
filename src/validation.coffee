@@ -1,54 +1,63 @@
+# numbers = "01234567890"
+# lLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+# uLetters = "abcdefghijklmnopqrstuvwxyz"
+
 controlValidations = 
 
   notEmpty : ->
-    ( str ) -> !!str
+    -> !!@el.value
 
   notEmptyTrim : ->
-    ( str ) -> !!str.trim()
+    -> !!@el.value.trim()
 
   numeric : ->
-    ( str ) ->
-      /^\d+$/.test str
+    ->
+      /^\d+$/.test @el.value
 
   alphanumeric : ->
-    ( str ) ->
-      /^[a-z0-9]+$/i.test str
+    ->
+      /^[a-z0-9]+$/i.test @el.value
 
   letters : ->
-    ( str ) -> 
-      /^[a-z]+$/i.test str
+    -> 
+      /^[a-z]+$/i.test @el.value
 
   isValue : ( value ) ->
-    ( str ) ->
-      str is value
+    ->
+      @el.value is value
 
-  email : do ->
+  email : ->
     i = document.createElement( "input" )
     i.type = "email"
     ->
-      ( str ) ->
-        i.value = str
-        i.validity.valid
+      i.value = @el.value
+      !!@el.value and i.validity.valid
+
+  datalist : ->
+    ->
+      listValues = map ( @el.list or [] ), ( option ) ->
+        option.value
+      @el.value in listValues
 
   allowed : ( allowedChars ) ->
     allowedChars = allowedChars.split( "" )
-    ( str ) ->
-      str = str.split( "" )
+    ->
+      str = @el.value.split( "" )
       for char in str
         return false if char not in allowedChars
       return true
 
   notAllowed : ( notAllowedChars ) ->
     notAllowedChars = notAllowedChars.split( "" )
-    ( str ) ->
-      str = str.split( "" )
+    ->
+      str = @el.value.split( "" )
       for char in notAllowedChars
         return false if char in notAllowedChars
       return true
 
   numberBetween : ( min, max ) ->
-    ( str ) ->
-      min <= Number( str ) <= max
+    ->
+      min <= Number( @el.value ) <= max
 
   numberMax : ( max ) ->
     validations.between( 0, max )
@@ -57,8 +66,8 @@ controlValidations =
     validations.between( min, Number.POSITIVE_INFINITY )
 
   lengthBetween : ( min, max ) ->
-    ( str ) ->
-      min <= str.length <= max
+    ->
+      min <= @el.value.length <= max
 
   lengthMax : ( max ) ->
     validations.lengthBetween( 0, max )
@@ -71,6 +80,9 @@ collectionValidations =
 
   allValid: ->
     @every ( control ) -> control.valid()
+
+  anyValid: ->
+    @some ( control ) -> control.valid()
 
   allChecked: ->
     @every ( control ) -> control.checked()

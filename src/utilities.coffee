@@ -1,3 +1,16 @@
+type : do ->
+  classToType =
+    '[object Boolean]': 'boolean'
+    '[object Number]': 'number'
+    '[object String]': 'string'
+    '[object Function]': 'function'
+    '[object Array]': 'array'
+    '[object Date]': 'date'
+    '[object RegExp]': 'regexp'
+    '[object Object]': 'object'
+  ( obj ) ->
+    if obj? then classToType[ Object.prototype.toString.call( obj ) ] else String( obj )
+
 extend = ( out ) ->
   out or= {}
   i = 1
@@ -56,13 +69,21 @@ mapToObj = ( arr, fn ) ->
   obj = {}
   for i in arr
     keyVal = fn( i )
-    if Array.isArray( keyVal) and keyVal.length is 2
+    if Array.isArray( keyVal ) and keyVal.length is 2
       obj[ keyVal[0] ] = keyVal[1]
   obj
 
 isEmpty = ( obj ) ->
-  return if Array.isArray( obj ) then !!obj.length else !!Object.keys( obj ).length
+  switch type obj
+    when "array"
+      !!obj.length
+    when "object"
+      !!Object.keys( obj ).length
+    else
+      !!obj
 
+isFunction = ( obj ) ->
+  type obj is "function"
 
 
 module.exports = 
@@ -80,7 +101,7 @@ module.exports =
   mapAllTrue: mapAllTrue
   mapToObj: mapToObj
   isEmpty: isEmpty
-
+  isFunction: isFunction
 
 
 

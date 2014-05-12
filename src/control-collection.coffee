@@ -2,14 +2,14 @@
   extend, 
   isEmpty, 
   each, 
-  mapToObj 
+  mapToObj,
+  isFunction
 } = require "./utilities.coffee"
 
-validation = require "./validation.coffee"
+validations = -> require( "./factory.coffee" )._validations.collectionValidations
 
 class ControlCollection extends Array
-
-
+  
   @defaults : do ->
     counter = 0
     ->
@@ -28,7 +28,11 @@ class ControlCollection extends Array
     @els = @map ( c ) -> c.el
 
     settings = extend( {}, ControlCollection.defaults(), options )
+    
     @id = settings.id
+    @valid = settings.valid if settings.valid
+    @value = settings.value if settings.value
+
 
   # Should be set to either "valueAsObject" or "valueAsArray"
   # Setting this property with the options object in the constructor

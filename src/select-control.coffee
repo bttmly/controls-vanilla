@@ -1,15 +1,11 @@
 BaseControl = require "./base-control.coffee"
-{ filter, each } = require "./utilities.coffee"
+{ filter, each, mapOne } = require "./utilities.coffee"
 
 class SelectControl extends BaseControl
 
   value : ->
-    sel = @selected()
-    return unless sel.length
-    if sel.length > 1
-      return sel.map ( option ) -> option.value
-    else
-      return sel[0].value
+    mapOne @selected(), ( option ) -> 
+      option.value
 
   selected : ->
     filter @el.options, ( option ) ->

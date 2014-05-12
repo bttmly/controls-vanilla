@@ -22,6 +22,10 @@ some = Function::call.bind( Array::some )
 slice = Function::call.bind( Array::slice )
 filter = Function::call.bind( Array::filter )
 
+mapOne = ( arr, itr ) ->
+  mapped = map( arr, itr )
+  if mapped.length > 1 then mapped else mapped[0]
+
 find = ( arr, test ) ->
   result = undefined
   some arr, ( value, index, list ) ->
@@ -70,6 +74,7 @@ module.exports =
   slice: slice
   filter: filter
   extend: extend
+  mapOne: mapOne
   camelize: camelize
   processSelector: processSelector
   mapAllTrue: mapAllTrue

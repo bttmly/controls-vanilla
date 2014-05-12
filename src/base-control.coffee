@@ -4,13 +4,6 @@ defaults =
   identifyingAttribute: "id"
 
 
-getLabel = do ->
-  labels = document.getElementsByTagName( "input" )
-  ( el ) ->
-    for label in labels
-      return label if label.control is el
-
-
 class BaseControl
   constructor: ( el, options = {} ) ->
     return false unless el instanceof Element
@@ -60,6 +53,9 @@ class BaseControl
     if @el.value
       @el.value = ""
       @dispatchEvent( "change" )
+
+
+  label : -> @el.labels[0]
       
 
   addEventListener : ( eventType, handler ) ->

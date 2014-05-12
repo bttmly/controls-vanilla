@@ -1,25 +1,11 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var BaseControl, defaults, extend, getLabel, slice, _ref;
+var BaseControl, defaults, extend, slice, _ref;
 
 _ref = require("./utilities.coffee"), extend = _ref.extend, slice = _ref.slice;
 
 defaults = {
   identifyingAttribute: "id"
 };
-
-getLabel = (function() {
-  var labels;
-  labels = document.getElementsByTagName("input");
-  return function(el) {
-    var label, _i, _len;
-    for (_i = 0, _len = labels.length; _i < _len; _i++) {
-      label = labels[_i];
-      if (label.control === el) {
-        return label;
-      }
-    }
-  };
-})();
 
 BaseControl = (function() {
   function BaseControl(el, options) {
@@ -83,6 +69,10 @@ BaseControl = (function() {
       this.el.value = "";
       return this.dispatchEvent("change");
     }
+  };
+
+  BaseControl.prototype.label = function() {
+    return this.el.labels[0];
   };
 
   BaseControl.prototype.addEventListener = function(eventType, handler) {
@@ -554,13 +544,13 @@ module.exports = Factory;
 
 
 },{"./base-control.coffee":1,"./button-control.coffee":2,"./checkable-control.coffee":3,"./control-collection.coffee":4,"./select-control.coffee":7,"./utilities.coffee":8,"./validation.coffee":9}],7:[function(require,module,exports){
-var BaseControl, SelectControl, each, filter, _ref,
+var BaseControl, SelectControl, each, filter, mapOne, _ref,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 BaseControl = require("./base-control.coffee");
 
-_ref = require("./utilities.coffee"), filter = _ref.filter, each = _ref.each;
+_ref = require("./utilities.coffee"), filter = _ref.filter, each = _ref.each, mapOne = _ref.mapOne;
 
 SelectControl = (function(_super) {
   __extends(SelectControl, _super);
@@ -570,18 +560,9 @@ SelectControl = (function(_super) {
   }
 
   SelectControl.prototype.value = function() {
-    var sel;
-    sel = this.selected();
-    if (!sel.length) {
-      return;
-    }
-    if (sel.length > 1) {
-      return sel.map(function(option) {
-        return option.value;
-      });
-    } else {
-      return sel[0].value;
-    }
+    return mapOne(this.selected(), function(option) {
+      return option.value;
+    });
   };
 
   SelectControl.prototype.selected = function() {
@@ -611,7 +592,7 @@ module.exports = SelectControl;
 
 
 },{"./base-control.coffee":1,"./utilities.coffee":8}],8:[function(require,module,exports){
-var camelize, each, extend, filter, find, isEmpty, map, mapAllTrue, mapToObj, processSelector, qsa, slice, some,
+var camelize, each, extend, filter, find, isEmpty, map, mapAllTrue, mapOne, mapToObj, processSelector, qsa, slice, some,
   __hasProp = {}.hasOwnProperty;
 
 extend = function(out) {
@@ -651,6 +632,16 @@ some = Function.prototype.call.bind(Array.prototype.some);
 slice = Function.prototype.call.bind(Array.prototype.slice);
 
 filter = Function.prototype.call.bind(Array.prototype.filter);
+
+mapOne = function(arr, itr) {
+  var mapped;
+  mapped = map(arr, itr);
+  if (mapped.length > 1) {
+    return mapped;
+  } else {
+    return mapped[0];
+  }
+};
 
 find = function(arr, test) {
   var result;
@@ -725,6 +716,7 @@ module.exports = {
   slice: slice,
   filter: filter,
   extend: extend,
+  mapOne: mapOne,
   camelize: camelize,
   processSelector: processSelector,
   mapAllTrue: mapAllTrue,

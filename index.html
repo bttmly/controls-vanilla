@@ -361,9 +361,9 @@
 
       window.masterCollection = Controls( collections );
 
-      // masterCollection.addEventListener( "change", function( event ) {
-      //   Log.print( JSON.stringify( this.value() ).replace(/,/g, ",\n") );
-      // });
+      masterCollection.addEventListener( "change", function( event ) {
+        Log.print( JSON.stringify( this.value() ).replace(/,/g, ",\n") );
+      });
 
       radioCollection.addEventListener( "change", function( event ) {
         console.log( event );

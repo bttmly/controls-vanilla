@@ -26,6 +26,9 @@ controlValidations =
     ->
       @el.value is value
 
+  phone : ->
+    controlValidations.allowed( "1234567890()-+" )
+
   email : ->
     i = document.createElement( "input" )
     i.type = "email"
@@ -60,20 +63,24 @@ controlValidations =
       min <= Number( @el.value ) <= max
 
   numberMax : ( max ) ->
-    validations.between( 0, max )
+    controlValidations.between( 0, max )
 
   numberMin : ( min) ->
-    validations.between( min, Number.POSITIVE_INFINITY )
+    controlValidations.between( min, Number.POSITIVE_INFINITY )
 
   lengthBetween : ( min, max ) ->
     ->
       min <= @el.value.length <= max
 
   lengthMax : ( max ) ->
-    validations.lengthBetween( 0, max )
+    controlValidations.lengthBetween( 0, max )
 
   lengthMin : ( min ) ->
-    validations.lengthBetween( min, Number.POSITIVE_INFINITY )
+    controlValidations.lengthBetween( min, Number.POSITIVE_INFINITY )
+
+  lengthIs : ( len ) ->
+    ->
+      @el.value.length is len
 
 
 collectionValidations =

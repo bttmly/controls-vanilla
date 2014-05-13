@@ -831,6 +831,9 @@ controlValidations = {
       return this.el.value === value;
     };
   },
+  phone: function() {
+    return controlValidations.allowed("1234567890()-+");
+  },
   email: function() {
     var i;
     i = document.createElement("input");
@@ -884,10 +887,10 @@ controlValidations = {
     };
   },
   numberMax: function(max) {
-    return validations.between(0, max);
+    return controlValidations.between(0, max);
   },
   numberMin: function(min) {
-    return validations.between(min, Number.POSITIVE_INFINITY);
+    return controlValidations.between(min, Number.POSITIVE_INFINITY);
   },
   lengthBetween: function(min, max) {
     return function() {
@@ -896,10 +899,15 @@ controlValidations = {
     };
   },
   lengthMax: function(max) {
-    return validations.lengthBetween(0, max);
+    return controlValidations.lengthBetween(0, max);
   },
   lengthMin: function(min) {
-    return validations.lengthBetween(min, Number.POSITIVE_INFINITY);
+    return controlValidations.lengthBetween(min, Number.POSITIVE_INFINITY);
+  },
+  lengthIs: function(len) {
+    return function() {
+      return this.el.value.length === len;
+    };
   }
 };
 

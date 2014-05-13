@@ -213,12 +213,16 @@ test "Events", ->
 
   changeHeard = false
   correctContext = false
-  mixedControls.on "change", ( event ) ->
-    changeHeard = true
+  handler = mixedControls.on "change", ( event ) ->
+    changeHeard = !changeHeard
     correctContext = true if @ is mixedControls
   mixedControls[0].dispatchEvent new Event "change", bubbles: true
-  equal changeHeard, true, ".on() works for event listeners"
+  equal changeHeard, true, ".on() attaches event listener"
   equal correctContext, true, "Handler bound to control collection"
+
+  mixedControls.off( "change", handler )
+  mixedControls[0].dispatchEvent new Event "change", bubbles: true
+  equal changeHeard, true, ".off() removes event listener"
 
   clickHeard = false
   mixedControls.on "click", ( event ) ->
@@ -232,7 +236,7 @@ test "Events", ->
   textCtl.on "valid", ( event ) ->
     validHeard = true
   textCtl.trigger( "change" )
-  equal validHeard, true, "automatic valid event triggering working"
+  equal validHeard, true, "automatic 'valid' event triggering working"
 
 test "Misc.", ->
   mixedControls = Controls( "#mixed-controls" )

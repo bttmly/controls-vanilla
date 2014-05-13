@@ -212,13 +212,13 @@
   });
 
   test("Events", function() {
-    var changeHeard, clickHeard, correctContext, mixedControls, text, textCtl, validHeard;
+    var changeHeard, clickHeard, correctContext, handler, mixedControls, text, textCtl, validHeard;
     mixedControls = Controls("#mixed-controls");
     text = qs("#mixed-controls [type='text']");
     changeHeard = false;
     correctContext = false;
-    mixedControls.on("change", function(event) {
-      changeHeard = true;
+    handler = mixedControls.on("change", function(event) {
+      changeHeard = !changeHeard;
       if (this === mixedControls) {
         return correctContext = true;
       }
@@ -226,8 +226,13 @@
     mixedControls[0].dispatchEvent(new Event("change", {
       bubbles: true
     }));
-    equal(changeHeard, true, ".on() works for event listeners");
+    equal(changeHeard, true, ".on() attaches event listener");
     equal(correctContext, true, "Handler bound to control collection");
+    mixedControls.off("change", handler);
+    mixedControls[0].dispatchEvent(new Event("change", {
+      bubbles: true
+    }));
+    equal(changeHeard, true, ".off() removes event listener");
     clickHeard = false;
     mixedControls.on("click", function(event) {
       return clickHeard = true;
@@ -243,7 +248,7 @@
       return validHeard = true;
     });
     textCtl.trigger("change");
-    return equal(validHeard, true, "automatic valid event triggering working");
+    return equal(validHeard, true, "automatic 'valid' event triggering working");
   });
 
   test("Misc.", function() {

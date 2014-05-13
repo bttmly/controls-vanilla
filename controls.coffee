@@ -1,3 +1,4 @@
+# Polyfills...
 # Polyfill Element::matches
 if Element and not Element::matches
     p = Element::
@@ -7,85 +8,91 @@ if Element and not Element::matches
       p.oMatchesSelector || 
       p.webkitMatchesSelector
 
-controlValidations =   
-  notEmpty : ->
-    ( el ) -> !!el.value
+# Utilities...
+# functional versions of Array prototype methods
+map = Function::call.bind( Array::map )
+each = Function::call.bind( Array::forEach )
+slice = Function::call.bind( Array::slice )
+filter = Function::call.bind( Array::filter )
 
-  notEmptyTrim : ->
-    ( el ) -> !!el.value.trim()
+# partical application
+partial = ( fn ) ->
+  args = slice( arguments, 1 )
+  ->
+    fn.apply @, args.concat( slice( arguments ) )
 
-  numeric : ->
-    ( el ) ->
-      /^\d+$/.test el.value
+isFunction = ( obj ) ->
+  obj and obj instanceof Function
 
-  alphanumeric : ->
-    ( el ) ->
-      /^[a-z0-9]+$/i.test el.value
+controlValidations = do ->
 
-  letters : ->
-    ( el ) -> 
-      /^[a-z]+$/i.test el.value
+  # http://benalman.com/news/2012/09/partial-application-in-javascript/#partial-application
 
-  isValue : ( value ) ->
-    ( el ) ->
-      el.value is value
 
-  phone : ->
-    controlValidations.allowed( "1234567890()-+ " )
+  # nice short namespace by which refer to each other.
+  v = 
+    notEmpty : ( el ) -> !!el.value
 
-  email : ->
-    i = document.createElement( "input" )
-    i.type = "email"
-    ( el ) ->
+    notEmptyTrim : ( el ) -> !!el.value.trim()
+
+    numeric: ( el ) -> /^\d+$/.test el.value
+
+    alphanumeric: ( el ) -> /^[a-z0-9]+$/i.test el.value
+
+    letters: ( el ) -> /^[a-z]+$/i.test el.value
+
+    isValue: ( value, el ) -> el.value is value
+
+    phone: ( el ) -> v.allowed( "1234567890()-+ ", el )
+
+    email: ( el ) ->
+      i = document.createElement( "input" )
+      i.type = "email"
       i.value = el.value
       !!el.value and i.validity.valid
 
-  list : ->
-    ( el ) ->
+    list: ( el ) ->
       listValues = map ( el.list.options or [] ), ( option ) ->
         option.value or option.innerHTML
       el.value in listValues
 
-  allowed : ( allowedChars ) ->
-    allowedChars = allowedChars.split( "" )
-    ( el ) ->
-      str = el.value.split( "" )
-      for char in str
-        return false if char not in allowedChars
-      return true
+    allowed: ( allowedChars, el ) ->
+        allowedChars = allowedChars.split( "" )
+        str = el.value.split( "" )
+        for char in str
+          return false if char not in allowedChars
+        return true
 
-  notAllowed : ( notAllowedChars ) ->
-    notAllowedChars = notAllowedChars.split( "" )
-    ( el ) ->
+    notAllowed: ( notAllowedChars, el ) ->
+      notAllowedChars = notAllowedChars.split( "" )
       str = el.value.split( "" )
       for char in notAllowedChars
         return false if char in str
       return true
 
-  numberBetween : ( min, max ) ->
-    ( el ) ->
-      min <= Number( el.value ) <= max
+    numberBetween: ( min, max, el ) ->
+      Number( min ) <= Number( el.value ) <= Number( max )
 
-  numberMax : ( max ) ->
-    controlValidations.numberBetween( 0, max )
+    numberMax: ( max, el ) ->
+      Number( el.value ) <= Number( max )
 
-  numberMin : ( min ) ->
-    controlValidations.numberBetween( min, Number.POSITIVE_INFINITY )
+    numberMin: ( min, el ) ->
+      Number( el.value ) >= Number( min )
 
-  lengthBetween : ( min, max ) ->
-    ( el ) ->
-      min <= el.value.length <= max
+    lengthBetween: ( min, max, el ) ->
+      Number( min ) <= el.value.length <= Number( max )
 
-  lengthMax : ( max ) ->
-    controlValidations.lengthBetween( 0, max )
+    lengthMax: ( max, el ) ->
+      el.value.length <= Number( max )
 
-  lengthMin : ( min ) ->
-    controlValidations.lengthBetween( min, Number.POSITIVE_INFINITY )
+    lengthMin: ( min, el ) ->
+      el.value.length >= Number( min )
 
-  lengthIs : ( len ) ->
-    ( el ) ->
+    lengthIs: ( len, el ) ->
       el.value.length is Number( len )
 
+  # return our validations out of this IIFE
+  v
 
 
 elValid = do ->
@@ -99,17 +106,15 @@ elValid = do ->
   ( el ) ->
     attr = el.dataset.controlValidation
     method = getMethod( attr )
-    args = getArgs( attr )
-
+    args = getArgs( attr ) or []
+    args.push( el )
     if method of controlValidations
-      fn = controlValidations[method].apply( null, args )
-      res = fn( el )
-      res
+      controlValidations[method].apply( null, args )
     else
       el.validity.valid
 
 # this is pretty rudimentary for now.
-# definitely doesn't support multiselect
+# definitely doesn't support multi select
 elValue = ( el ) ->
   if el.matches( "input[type=radio]" ) or el.matches( "input[type=checkbox]" )
     if el.checked then el.value else false
@@ -122,6 +127,7 @@ elValue = ( el ) ->
   else
     false
 
+# Clear the value or checked state or what-have-you from a control.
 elClear = ( el ) ->
   changed = false
   if el.matches( "[type=radio]" ) or el.matches( "[type=checkbox]" )
@@ -143,13 +149,6 @@ validEvent = -> new Event "valid",
 
 changedEvent = -> new Event "changed",
   bubbles: true
-
-map = Function::call.bind( Array::map )
-each = Function::call.bind( Array::forEach )
-slice = Function::call.bind( Array::slice )
-filter = Function::call.bind( Array::filter )
-
-
 
 class window.ValueObject extends Array
   constructor: ( arr ) ->
@@ -232,7 +231,6 @@ class ControlCollection extends Array
     args.unshift( notFn )
     new ControlCollection Array::filter.apply( @, args )
 
-
   tag: ( tag ) ->
     new ControlCollection @filter ( el ) ->
       el.tagName.toLowerCase() is tag.toLowerCase
@@ -267,16 +265,25 @@ class ControlCollection extends Array
     eventHandler = ( event ) =>
       if event.target in @
         handler.bind( @ )( event )
-
     document.addEventListener( eventType, eventHandler )
+    eventHandler
+
+  off: ( eventType, handler ) ->
+    document.removeEventListener( eventType, handler )
   
-  # jank at the moment.
+  # jank at the moment, but avoids triggering it on each element.
+  # to do: use detail.id w/ array of already handled events to avoid this.
   trigger : ( evt ) ->
     unless evt instanceof Event
       evt = new CustomEvent evt,
         bubbles: true
         detail: {}
     @[0].dispatchEvent( evt )
+
+  invoke: ( fn, args... ) ->
+    for control in @
+      if fn of control and isFunction control[fn]
+        control[fn]( args )
 
   mapIdToProp : ( prop ) ->
     a = []
@@ -311,10 +318,33 @@ Factory = do ->
 
   controlTags = ["input", "select", "button", "textarea"]
 
-  ( parentSelector ) ->
-    parent = document.querySelector( parentSelector )
-    controls = parent.querySelectorAll( controlTags.join( ", " ) )
-    new ControlCollection( controls ) 
+  ( param ) ->
+
+    controlElements = []
+
+    inner = ( param ) ->
+      
+      if typeof param is "string"
+        inner( document.querySelector( param ) )
+        return
+
+      else if param instanceof Element 
+        
+        if param.tagName.toLowerCase() not in controlTags
+          inner param.querySelectorAll controlTags.join ", "
+          return
+
+        else
+          controlElements.push( param )
+          return
+
+      else if param.length?
+        each param, ( el ) -> inner( el )
+        return
+
+    inner( param )
+
+    new ControlCollection( controlElements ) 
 
 Factory.validate = elValid
 
@@ -322,5 +352,7 @@ Factory.addValidation = ( name, fn ) ->
   if controlValidations[ name ]
     return false
   controlValidations[ name ] = fn  
+
+Factory.getValidations = -> controlValidations
 
 window.Controls = Factory

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <link rel="stylesheet" href="qunit.css">
+  <script src="qunit.js"></script>
+  <script src="../collection.js"></script>
+  <script src="test.js"></script>
+</head>
+<body>
+
+  <div id="qunit"></div>
+
+  <div id="qunit-fixture">
+    
+    <div id="controls">
+
+      <div id="text-controls">
+        <input id="text1" type="text">
+        <input id="text2" type="text">
+        <input id="text3" type="text">
+      </div>
+
+      <div id="mixed-controls">
+        <input id="mixedCheck" type="checkbox" value="check">
+        <input id="mixedText" type="text" value="text">
+        <select id="mixedSelect">
+          <option>option1</option>
+          <option>option2</option>
+          <option selected>option3</option>
+        </select>
+      </div>
+
+      <div id="validation">
+        <input id="notEmpty" data-control-validation="notEmpty" type="text" value=" ">
+        <input id="notEmptyTrim" data-control-validation="notEmptyTrim" type="text" value="a">
+        <input id="numeric" data-control-validation="numeric" type="text" value="123456">
+        <input id="alphanumeric" data-control-validation="alphanumeric" type="text" value="abc123">
+        <input id="letters" data-control-validation="letters" type="text" value="abcdef">
+        <input id="isValue" data-control-validation="isValue('some value')" type="text" value="some value">
+        <input id="phone" data-control-validation="phone" type="text" value="(510) 555-5555">
+        <input id="list" data-control-validation="list" list="dlist" value="red">
+        <input id="email" data-control-validation="email" type="text" value="bob@email.com">
+        <input id="allowed" data-control-validation="allowed('ABCDEFGHIJKLMNOPQRSTUVWXYZ ')" type="text" value="ALL CAPS">
+        <input id="notAllowed" data-control-validation="notAllowed('ABCDEFGHIJKLMNOPQRSTUVWXYZ')" type="text" value="nocaps">
+        <input id="numberBetween" data-control-validation="numberBetween(0, 10)" type="text" value="5">
+        <input id="numberMax" data-control-validation="numberMax(100)" type="text" value="90">
+        <input id="numberMin" data-control-validation="numberMin(1000)" type="text" value="2000">
+        <input id="lengthBetween" data-control-validation="lengthBetween(8, 10)" type="text" value="abcdefghij">
+        <input id="lengthMax" data-control-validation="lengthMax(8)" type="text" value="12345678">
+        <input id="lengthMin" data-control-validation="lengthMin(4)" type="text" value="1234">
+        <input id="lengthIs" data-control-validation="lengthIs(6)" type="text" value="abcdef">
+
+        <input id="notEmptyFalse" data-control-validation="notEmpty" type="text" value="">
+        <input id="notEmptyTrimFalse" data-control-validation="notEmptyTrim" type="text" value=" ">
+        <input id="numericFalse" data-control-validation="numeric" type="text" value="!123456">
+        <input id="alphanumericFalse" data-control-validation="alphanumeric" type="text" value="!abc123">
+        <input id="lettersFalse" data-control-validation="letters" type="text" value="!abcdef">
+        <input id="isValueFalse" data-control-validation="isValue('some value')" type="text" value="not some value">
+        <input id="phoneFalse" data-control-validation="phone" type="text" value="(510) xyz-5555">
+        <input id="listFalse" data-control-validation="list" list="dlist" value="green">
+        <input id="emailFalse" data-control-validation="email" type="text" value="bobemailcom">
+        <input id="allowedFalse" data-control-validation="allowed('ABCDEFGHIJKLMNOPQRSTUVWXYZ ')" type="text" value="Mixed Case">
+        <input id="notAllowedFalse" data-control-validation="notAllowed('ABCDEFGHIJKLMNOPQRSTUVWXYZ')" type="text" value="Mixed Case">
+        <input id="numberBetweenFalse" data-control-validation="numberBetween(0, 10)" type="text" value="20">
+        <input id="numberMaxFalse" data-control-validation="numberMax(100)" type="text" value="110">
+        <input id="numberMinFalse" data-control-validation="numberMin(1000)" type="text" value="900">
+        <input id="lengthBetweenFalse" data-control-validation="lengthBetween(8, 10)" type="text" value="abcd">
+        <input id="lengthMaxFalse" data-control-validation="lengthMax(8)" type="text" value="1234567890">
+        <input id="lengthMinFalse" data-control-validation="lengthMin(4)" type="text" value="12">
+        <input id="lengthIsFalse" data-control-validation="lengthIs(6)" type="text" value="ab">
+
+        <datalist id="dlist">
+          <option>red</option>
+          <option>gold</option>
+        </datalist>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

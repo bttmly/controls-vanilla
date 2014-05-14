@@ -68,3 +68,47 @@ index - *Number*
 ### .last()
 
 ### .serialize()
+
+
+## Control Validation
+Add these to controls with `data-control-validation` to activate them.
+
+### notEmpty
+
+### notEmptyTrim
+
+### numeric
+
+### alphanumeric
+
+### letters
+
+### isValue
+
+### phone
+
+### email
+
+### list
+
+### radio
+
+### checkbox
+
+### allowed
+
+### notAllowed
+
+### numberBetween
+
+### numberMax
+
+### numberMin
+
+### lengthBetween
+
+### lengthMax
+
+### lengthMin
+
+### lengthIs

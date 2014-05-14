@@ -51,7 +51,7 @@ controlValidations = do ->
 
     letters: ( el ) -> /^[a-z]+$/i.test el.value
 
-    isValue: ( value, el ) -> el.value is value
+    isValue: ( value, el ) -> String( el.value ) is String( value )
 
     phone: ( el ) -> v.allowed( "1234567890()-+ ", el )
 

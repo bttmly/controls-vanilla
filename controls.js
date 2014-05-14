@@ -75,7 +75,7 @@
         return /^[a-z]+$/i.test(el.value);
       },
       isValue: function(value, el) {
-        return el.value === value;
+        return String(el.value) === String(value);
       },
       phone: function(el) {
         return v.allowed("1234567890()-+ ", el);

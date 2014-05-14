@@ -278,6 +278,7 @@ class window.ValueObject extends Array
 class ControlCollection extends Array
   constructor: ( elements ) ->
     @_setValidityListener = false
+    @_eventListeners = {}
     [].push.apply( @, elements )
 
   value: ->
@@ -363,12 +364,23 @@ class ControlCollection extends Array
       if event.target in @
         handler.bind( @ )( event )
     document.addEventListener( eventType, eventHandler )
+    @_eventListeners[ eventType ] or= []
+    @_eventListeners[ eventType ].push( eventHandler )
     eventHandler
 
   # Remove a previously attached event listener.
   off: ( eventType, handler ) ->
     document.removeEventListener( eventType, handler )
   
+  # Remove all listeners for a given event type, or if no type is passed,
+  # all listeners on the collection.
+  offAll : ( eventType ) ->
+    list = if eventType then [ eventType ] else Object.keys( @_eventListeners )
+    each list, ( type ) =>
+      listeners = @_eventListeners[ type ] or []
+      each listeners, ( fn ) =>
+        @off( type, fn )
+
   # Super jank at the moment, but avoids triggering it on each element.
   # to do: use detail.id w/ array of already handled events to avoid this.
   trigger : ( evt ) ->
@@ -377,6 +389,8 @@ class ControlCollection extends Array
         bubbles: true
         detail: {}
     @[0].dispatchEvent( evt )
+
+
 
   # call a function or method on each control
   # function is called in context of control
@@ -404,24 +418,16 @@ class ControlCollection extends Array
       a.push( o )
     new ValueObject( a )
 
-  # Only set one validity listener per collection.
+  
   setValidityListener : ->
+    # Will only set validity listeners once per collection.
     unless @_validityListener
       @_validityListener = true
       @on "change", ( event ) ->
         if @valid() then @trigger validEvent() else @trigger invalidEvent()
+      @on "input", ( event ) ->
+        if @valid() then @trigger validEvent() else @trigger invalidEvent() 
       @trigger "change"
-  
-  # Non-essential for now.
-  #
-  # areDisabled: ->
-  #   @mapIdToProp( "disabled" ) #returns ValueObject
-
-  # areRequired: ->
-  #   @mapIdToProp( "required" ) #returns ValueObject
-
-  # areChecked: ->
-  #   @mapIdToProp( "checked" ) #returns ValueObject
 
 
 Factory = do ->
@@ -450,9 +456,7 @@ Factory = do ->
           return
 
         # push control elements into the array we're building
-        # set all buttons to type button -- submit is stupid.
         else
-          param.type = "button" if param.matches( "button" )
           controlElements.push( param )
           return
 

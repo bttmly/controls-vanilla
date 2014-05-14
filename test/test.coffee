@@ -9,6 +9,9 @@ qsa = ( selector, context = document ) ->
   context = document.querySelector( context ) if typeof context is "string"
   slice context.querySelectorAll( selector )
 
+inc = -> 
+  i = 0
+  -> ++i
 
 test "Value", ->
   mixedControls = Controls( "#mixed-controls" )
@@ -255,11 +258,18 @@ test "Events", ->
   mixedControls[0].dispatchEvent new Event "change", bubbles: true
   equal changeHeard, true, ".off() removes event listener"
 
-  clickHeard = false
+  clicks = inc()
+  v = undefined
   mixedControls.on "click", ( event ) ->
-    clickHeard = true
+    v = clicks()
   mixedControls.trigger( "click" )
-  equal clickHeard, true, ".trigger() works for event triggering"
+  equal v, 1, ".trigger() works for event triggering"
+
+  equal mixedControls._eventListeners.click.length, 1, "_eventListeners holds references to listeners"
+
+  mixedControls.offAll( "click" )
+  mixedControls.trigger( "click" )
+  equal v, 1, ".offAll() removes events"
 
   textCtl = mixedControls.filter( "[type='text']" )
   textCtl.valid = -> true
@@ -268,6 +278,8 @@ test "Events", ->
     validHeard = true
   textCtl.trigger( "change" )
   equal validHeard, true, "automatic 'valid' event triggering working"
+
+
 
 test "Misc.", ->
 

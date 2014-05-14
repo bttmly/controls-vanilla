@@ -374,6 +374,7 @@
 
     function ControlCollection(elements) {
       this._setValidityListener = false;
+      this._eventListeners = {};
       [].push.apply(this, elements);
     }
 
@@ -490,7 +491,7 @@
     };
 
     ControlCollection.prototype.on = function(eventType, handler) {
-      var eventHandler;
+      var eventHandler, _base;
       if (eventType === "valid") {
         this.setValidityListener();
       }
@@ -503,11 +504,27 @@
         };
       })(this);
       document.addEventListener(eventType, eventHandler);
+      (_base = this._eventListeners)[eventType] || (_base[eventType] = []);
+      this._eventListeners[eventType].push(eventHandler);
       return eventHandler;
     };
 
     ControlCollection.prototype.off = function(eventType, handler) {
       return document.removeEventListener(eventType, handler);
+    };
+
+    ControlCollection.prototype.offAll = function(eventType) {
+      var list;
+      list = eventType ? [eventType] : Object.keys(this._eventListeners);
+      return each(list, (function(_this) {
+        return function(type) {
+          var listeners;
+          listeners = _this._eventListeners[type] || [];
+          return each(listeners, function(fn) {
+            return _this.off(type, fn);
+          });
+        };
+      })(this));
     };
 
     ControlCollection.prototype.trigger = function(evt) {
@@ -569,6 +586,13 @@
             return this.trigger(invalidEvent());
           }
         });
+        this.on("input", function(event) {
+          if (this.valid()) {
+            return this.trigger(validEvent());
+          } else {
+            return this.trigger(invalidEvent());
+          }
+        });
         return this.trigger("change");
       }
     };
@@ -591,9 +615,6 @@
           if (_ref = param.tagName.toLowerCase(), __indexOf.call(controlTags, _ref) < 0) {
             inner(param.querySelectorAll(controlTags.join(", ")));
           } else {
-            if (param.matches("button")) {
-              param.type = "button";
-            }
             controlElements.push(param);
           }
         } else if (param.length != null) {

@@ -300,4 +300,22 @@ test "Misc.", ->
     ] ),
     ".mapIdToProp() looks good"
 
+test "External", ->
+
+  noop = ->
+    
+  a = Controls.getValidations()
+  a.radio = noop
+  b = Controls.getValidations()
+  equal ( b.radio is noop ), false, "Can't modify controlValidations directly."
+
+  c = Controls.getValidations()
+  c.noop = noop
+  d = Controls.getValidations()
+  equal ( "noop" of d ), false, "Can't add controlValidations directly."
+
+  Controls.addValidation "noop", noop
+  e = Controls.getValidations()
+  equal ( "noop" of e ), true, "Can add controlValidations through addValidation()"
+
 

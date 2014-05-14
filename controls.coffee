@@ -16,6 +16,17 @@ slice = Function::call.bind( Array::slice )
 every = Function::call.bind( Array::every )
 filter = Function::call.bind( Array::filter )
 
+# Extend/clone
+extend = ( out ) ->
+  out or= {}
+  i = 1
+  while i < arguments.length
+    continue unless arguments[i]
+    for own key of arguments[i]
+      out[key] = arguments[i][key]
+    i++
+  out
+
 # Simple DOM selection function; returns a normal array
 $_ = ( selector, context = document ) ->
   if typeof context is "string"
@@ -129,8 +140,8 @@ elValid = do ->
     else if ( attr = el.dataset.controlValidation )
       method = getMethod( attr )
       args = getArgs( attr ) or []
-      # force args length to enable defaults
-      args.length = controlValidations[method].length - 1
+      sigLength = controlValidations[method].length
+      args.length = if sigLength is 0 then 0 else sigLength - 1
       args.push( el )
       if method of controlValidations
         controlValidations[method].apply( null, args )
@@ -436,7 +447,8 @@ Factory.addValidation = ( name, fn ) ->
   controlValidations[ name ] = fn
 
 # Allow access to validation functions w/o letting them be altered
-Factory.getValidations = -> controlValidations
+Factory.getValidations = -> 
+  extend( {}, controlValidations )
 
 # expose the ControlCollection constructor
 Factory.init = ControlCollection

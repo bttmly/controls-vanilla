@@ -321,4 +321,20 @@
     ]), ".mapIdToProp() looks good");
   });
 
+  test("External", function() {
+    var a, b, c, d, e, noop;
+    noop = function() {};
+    a = Controls.getValidations();
+    a.radio = noop;
+    b = Controls.getValidations();
+    equal(b.radio === noop, false, "Can't modify controlValidations directly.");
+    c = Controls.getValidations();
+    c.noop = noop;
+    d = Controls.getValidations();
+    equal("noop" in d, false, "Can't add controlValidations directly.");
+    Controls.addValidation("noop", noop);
+    e = Controls.getValidations();
+    return equal("noop" in e, true, "Can add controlValidations through addValidation()");
+  });
+
 }).call(this);

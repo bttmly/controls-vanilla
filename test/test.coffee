@@ -2,6 +2,9 @@ slice = Function::call.bind( Array::slice )
 qs = document.querySelector.bind( document )
 gebi = document.getElementById.bind( document )
 
+gebn = ( name ) ->
+  slice document.getElementsByName( name )
+
 qsa = ( selector, context = document ) ->
   context = document.querySelector( context ) if typeof context is "string"
   slice context.querySelectorAll( selector )
@@ -134,6 +137,21 @@ test "Valid", ->
   equal Controls.validate( lengthMaxFalse ), false, "'lengthMax' validation false as expected" 
   equal Controls.validate( lengthMinFalse ), false, "'lengthMin' validation false as expected" 
   equal Controls.validate( lengthIsFalse ), false, "'lengthIs' validation false as expected" 
+
+  radios = gebn "radio"
+  equal Controls.validate( radios[0] ), false, "Radio should not validate if none matching it's name are checked"
+  radios[0].checked = true
+  equal Controls.validate( radios[0] ), true, "Radio should validate if it itself is checked"
+  equal Controls.validate( radios[1] ), true, "Radio should validate if another radio matching it's name is checked"
+
+  checks = gebn "checkbox"
+  equal Controls.validate( checks[0] ), true, "Checkbox should by default validate if none matching it's name are checked"
+  equal Controls.validate( checks[1] ), false, "Checkbox should not validate if <= 'min' matching it's name are checked"
+  checks[0].checked = true
+  equal Controls.validate( checks[1] ), true, "Checkbox should validate if >= 'min' matching it's name are checked"
+  equal Controls.validate( checks[2] ), true, "Checkbox should validate if <= 'max' matching it's name are checked"
+  checks[1].checked = true
+  equal Controls.validate( checks[2] ), false, "Checkbox should not validate if >= 'max' matching it's name are checked"
 
 
 test "Filtering", ->

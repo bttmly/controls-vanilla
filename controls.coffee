@@ -23,13 +23,6 @@ $_ = ( selector, context = document ) ->
   throw new TypeError( "Can't select with that context.") unless context instanceof Node
   slice context.querySelectorAll( selector )
 
-# partial application
-# http://benalman.com/news/2012/09/partial-application-in-javascript/#partial-application
-partial = ( fn ) ->
-  args = slice( arguments, 1 )
-  ->
-    fn.apply @, args.concat( slice( arguments ) )
-
 isFunction = ( obj ) ->
   obj and obj instanceof Function
 
@@ -62,20 +55,20 @@ controlValidations = do ->
         option.value or option.innerHTML
       el.value in listValues
     
-    # TODO: add test
     radio: ( el ) ->
-      name = el.name
-      $_( "input[type='radio'][name='#{name}']" ).some ( input ) -> input.checked
-
-    # TODO: add test
-    checkbox: ( el, minChecked = 0, maxChecked = 50 ) ->
       if ( name = el.name )
-        len = $_( "input[type='radio'][name='#{name}']" ).filter ( input ) -> input.checked
+        $_( "input[type='radio'][name='#{name}']" ).some ( input ) -> input.checked
+      # won't validate unnamed radios
+      else
+        false
+
+    checkbox: ( minChecked = 0, maxChecked = 50, el ) ->
+      if ( name = el.name )
+        len = $_( "input[type='checkbox'][name='#{name}']" ).filter( ( input ) -> input.checked ).length
         return minChecked <= len <= maxChecked
-      # default to true; be permissive w. checkboxes
+      # will validate unnamed checkboxes
       else
         true
-
 
     allowed: ( allowedChars, el ) ->
         allowedChars = allowedChars.split( "" )
@@ -116,6 +109,7 @@ controlValidations = do ->
   v
 
 
+
 # elValid, elValue, and elClear are basically adapters for the various 
 # controls we're working with. Much easier than working with intermediary classes.
 
@@ -132,12 +126,14 @@ elValid = do ->
   ( el, customFn ) ->
     if customFn
       return customFn( el )
-    attr = el.dataset.controlValidation
-    method = getMethod( attr )
-    args = getArgs( attr ) or []
-    args.push( el )
-    if method of controlValidations
-      controlValidations[method].apply( null, args )
+    else if ( attr = el.dataset.controlValidation )
+      method = getMethod( attr )
+      args = getArgs( attr ) or []
+      # force args length to enable defaults
+      args.length = controlValidations[method].length - 1
+      args.push( el )
+      if method of controlValidations
+        controlValidations[method].apply( null, args )
     else
       el.validity.valid
 
@@ -195,6 +191,10 @@ elClear = ( el ) ->
       changed = true
   return changed
 
+
+
+# Functions to generate events we'll be triggering often.
+# If addding event id's, change to "new CustomEvent", and use details: {}
 validEvent = -> new Event "valid", 
   bubbles: true
 
@@ -204,9 +204,10 @@ invalidEvent = -> new Event "invalid",
 changedEvent = -> new Event "changed",
   bubbles: true
 
+
+
 class window.ValueObject extends Array
   constructor: ( arr ) ->
-    # can do further checking for well formed value object
     if Array.isArray( arr )
       [].push.apply( @, arr )
     else
@@ -440,4 +441,5 @@ Factory.getValidations = -> controlValidations
 # expose the ControlCollection constructor
 Factory.init = ControlCollection
 
+# expose factory as the namespace
 window.Controls = Factory

@@ -16,6 +16,12 @@ slice = Function::call.bind( Array::slice )
 every = Function::call.bind( Array::every )
 filter = Function::call.bind( Array::filter )
 
+remove = ( arr, val ) ->
+  idx = arr.indexOf( value )
+  if idx > 0
+    arr.splice( idx, 1 )
+  arr
+
 # Extend/clone
 extend = ( out ) ->
   out or= {}
@@ -371,7 +377,9 @@ class ControlCollection extends Array
   # Remove a previously attached event listener.
   off: ( eventType, handler ) ->
     document.removeEventListener( eventType, handler )
-  
+    listeners = @_eventListeners[ eventType ] or []
+    remove( listeners, handler )
+
   # Remove all listeners for a given event type, or if no type is passed,
   # all listeners on the collection.
   offAll : ( eventType ) ->
@@ -389,8 +397,6 @@ class ControlCollection extends Array
         bubbles: true
         detail: {}
     @[0].dispatchEvent( evt )
-
-
 
   # call a function or method on each control
   # function is called in context of control

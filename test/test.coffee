@@ -1,5 +1,11 @@
+slice = Function::call.bind( Array::slice )
 qs = document.querySelector.bind( document )
 gebi = document.getElementById.bind( document )
+
+qsa = ( selector, context = document ) ->
+  context = document.querySelector( context ) if typeof context is "string"
+  slice context.querySelectorAll( selector )
+
 
 test "Value", ->
   mixedControls = Controls( "#mixed-controls" )
@@ -239,6 +245,34 @@ test "Events", ->
   equal validHeard, true, "automatic 'valid' event triggering working"
 
 test "Misc.", ->
+
+  text1 = Controls( "#text1" )
+  clickHeard = false
+  text1.on "click", ( event ) ->
+    clickHeard = true
+  text1.invoke( "click" )
+  equal clickHeard, true, "Invoking 'click' triggers listeners"
+
+  mixedControls = Controls( "#mixed-controls" )
+  response = []
+  mixedControls.invoke ->
+    response.push( "invoked" )
+  equal JSON.stringify( response ), JSON.stringify( ["invoked", "invoked", "invoked"] ), "Passing functions to invoke works."
+
+  response = []
+  mixedControls.invoke ->
+    response.push( @id )
+  equal JSON.stringify( response ), JSON.stringify( ["mixedCheck", "mixedText", "mixedSelect"] ), "Functions are invoked in the context of the control DOM element."
+  
+  labels = qsa( "label", "#mixed-controls" )
+  colLabels = mixedControls.labels()
+  equal labels.length is colLabels.length and labels.every( ( label ) ->
+    label in colLabels
+  ), true, "Labels gets labels of collection's controls"
+
+  equal 
+
+
   mixedControls = Controls( "#mixed-controls" )
   equal JSON.stringify( mixedControls.mapIdToProp( "type" ).normal() ),
     JSON.stringify( [

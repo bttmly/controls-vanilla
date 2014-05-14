@@ -13,9 +13,18 @@ if Element and not Element::matches
 map = Function::call.bind( Array::map )
 each = Function::call.bind( Array::forEach )
 slice = Function::call.bind( Array::slice )
+every = Function::call.bind( Array::every )
 filter = Function::call.bind( Array::filter )
 
-# partical application
+# Simple DOM selection function; returns a normal array
+$_ = ( selector, context = document ) ->
+  if typeof context is "string"
+    context = document.querySelector( context )
+  throw new TypeError( "Can't select with that context.") unless context instanceof Node
+  slice context.querySelectorAll( selector )
+
+# partial application
+# http://benalman.com/news/2012/09/partial-application-in-javascript/#partial-application
 partial = ( fn ) ->
   args = slice( arguments, 1 )
   ->
@@ -26,10 +35,7 @@ isFunction = ( obj ) ->
 
 controlValidations = do ->
 
-  # http://benalman.com/news/2012/09/partial-application-in-javascript/#partial-application
-
-
-  # nice short namespace by which refer to each other.
+  # nice short namespace by which validations refer to each other.
   v = 
     notEmpty : ( el ) -> !!el.value
 
@@ -55,6 +61,21 @@ controlValidations = do ->
       listValues = map ( el.list.options or [] ), ( option ) ->
         option.value or option.innerHTML
       el.value in listValues
+    
+    # TODO: add test
+    radio: ( el ) ->
+      name = el.name
+      $_( "input[type='radio'][name='#{name}']" ).some ( input ) -> input.checked
+
+    # TODO: add test
+    checkbox: ( el, minChecked = 0, maxChecked = 50 ) ->
+      if ( name = el.name )
+        len = $_( "input[type='radio'][name='#{name}']" ).filter ( input ) -> input.checked
+        return minChecked <= len <= maxChecked
+      # default to true; be permissive w. checkboxes
+      else
+        true
+
 
     allowed: ( allowedChars, el ) ->
         allowedChars = allowedChars.split( "" )
@@ -95,6 +116,11 @@ controlValidations = do ->
   v
 
 
+# elValid, elValue, and elClear are basically adapters for the various 
+# controls we're working with. Much easier than working with intermediary classes.
+
+# check if an element is valid
+# tries to use [data-control-validation] with .validity as a fallback
 elValid = do ->
 
   getMethod = ( str ) ->
@@ -103,7 +129,9 @@ elValid = do ->
   getArgs = ( str ) ->
     str?.match( /\(([^)]+)\)/ )?[ 1 ].split( "," ).map ( arg ) -> arg?.trim().replace(/'/g, "")
 
-  ( el ) ->
+  ( el, customFn ) ->
+    if customFn
+      return customFn( el )
     attr = el.dataset.controlValidation
     method = getMethod( attr )
     args = getArgs( attr ) or []
@@ -113,31 +141,54 @@ elValid = do ->
     else
       el.validity.valid
 
-# this is pretty rudimentary for now.
+# Get value of element.
+# This is pretty rudimentary for now.
 # definitely doesn't support multi select
 elValue = ( el ) ->
+  # only gets a value for a checkable if it's checked
   if el.matches( "input[type=radio]" ) or el.matches( "input[type=checkbox]" )
     if el.checked then el.value else false
+  # get the first non-disabled selected option
+  # no support for multi select currently
   else if el.matches( "select" )
     if el.selectedOptions[0].disabled is false then el.selectedOptions[0].value else false
-  else if el.matches( "button" )
+  # buttons don't have values
+  else if el.matches( "button" ) or el.matches( "input[type='button']" )
     false
-  else if el.matches( "input" )
+  # catches other control types
+  else if el.matches( "input" ) or el.matches( "textarea" )
     el.value
-  else
+  # false if we didn't catch it earlier
+  else 
     false
 
-# Clear the value or checked state or what-have-you from a control.
+# Clears the value or checked state or what-have-you from a control.
+# If the element's value does actually change, we return true from this
+# Which indicates that we should fire a "change" event.
 elClear = ( el ) ->
   changed = false
+
   if el.matches( "[type=radio]" ) or el.matches( "[type=checkbox]" )
     if el.checked
       el.checked = false
       changed = true
+
+  # Programmatically selecting/deselecting select options is a little weird.
+  # This should work OK, but don't rely heavily on accurate "change" events 
+  # for <select> at this point
   else if el.matches( "select" )
     if el.selectedOptions.length
+      # save the original selected set
+      originalSelected = el.selectedOptions
+      # set set the selected property of each option to false
       each el.selectedOptions, ( option ) -> option.selected = false
-      changed = true
+      # if there are still selected items, check if anything has changed
+      if el.selectedOptions.length is originalSelected.length
+        # if every item in the origial selected set is in the 
+        # current selected set, nothing changed
+        changed = !every originalSelected, ( opt ) ->
+          opt in el.selectedOptions
+
   else if el.matches( "input" )
     if el.value
       el.value = ""
@@ -145,6 +196,9 @@ elClear = ( el ) ->
   return changed
 
 validEvent = -> new Event "valid", 
+  bubbles: true
+
+invalidEvent = -> new Event "invalid",
   bubbles: true
 
 changedEvent = -> new Event "changed",
@@ -197,9 +251,12 @@ class window.ValueObject extends Array
 
 class ControlCollection extends Array
   constructor: ( elements ) ->
+    @_setValidityListener = false
     [].push.apply( @, elements )
 
   value: ->
+    # consider IF and HOW to handle get/set signatures
+    # if arguments.length then return @setValue( arguments ) else @getValue()
     values = []
     for control in @
       v = elValue( control )
@@ -211,7 +268,7 @@ class ControlCollection extends Array
     new ValueObject( values )
 
   valid: ->
-    @every ( el ) -> elValid( el )
+    every @, ( el ) -> elValid( el )
 
   filter : ->
     args = slice( arguments )
@@ -271,7 +328,7 @@ class ControlCollection extends Array
   off: ( eventType, handler ) ->
     document.removeEventListener( eventType, handler )
   
-  # jank at the moment, but avoids triggering it on each element.
+  # Super jank at the moment, but avoids triggering it on each element.
   # to do: use detail.id w/ array of already handled events to avoid this.
   trigger : ( evt ) ->
     unless evt instanceof Event
@@ -280,12 +337,23 @@ class ControlCollection extends Array
         detail: {}
     @[0].dispatchEvent( evt )
 
+
   invoke: ( fn, args... ) ->
     for control in @
-      if fn of control and isFunction control[fn]
-        control[fn]( args )
+      if typeof fn is "string"
+        if fn of control and isFunction control[fn]
+          control[fn]( args )
+      else if isFunction( fn )
+        fn.apply( control, args )
+    @
 
-  mapIdToProp : ( prop ) ->
+  labels: ->
+    labels = []
+    for control in @
+      [].push.apply( labels, control.labels )
+    labels
+
+  mapIdToProp: ( prop ) ->
     a = []
     for control in @
       o = {}
@@ -294,13 +362,13 @@ class ControlCollection extends Array
       a.push( o )
     new ValueObject( a )
 
-  setValidityListener : do ->
-    validityListener = false
-    ->
-      unless validityListener
-        validityListener = true
-        @on "change", ( event ) ->
-          @trigger validEvent() if @valid() 
+  # Only set one validity listener per collection.
+  setValidityListener : ->
+    unless @_validityListener
+      @_validityListener = true
+      @on "change", ( event ) ->
+        if @valid() then @trigger validEvent() else @trigger invalidEvent()
+      @trigger "change"
   
   # Non-essential for now.
   #
@@ -320,39 +388,56 @@ Factory = do ->
 
   ( param ) ->
 
+    # hold a reference to the control list we're building out here.
     controlElements = []
 
     inner = ( param ) ->
       
+      # matches strings, duh
       if typeof param is "string"
         inner( document.querySelector( param ) )
         return
 
+      # matches elements
       else if param instanceof Element 
         
+        # checks if not a control element
+        # get descendant controls and pass them back into this function NodeList
         if param.tagName.toLowerCase() not in controlTags
           inner param.querySelectorAll controlTags.join ", "
           return
 
+        # push control elements into the array we're building
+        # set all buttons to type button -- submit is stupid.
         else
+          param.type = "button" if param.matches( "button" )
           controlElements.push( param )
           return
 
+      # matches instances of Array, NodeList, HTMLCollection, jQuery, ControlCollection, etc
+      # passes each item in those array-like structures back into this function
       else if param.length?
         each param, ( el ) -> inner( el )
         return
 
+    # kick off the inner function
     inner( param )
 
     new ControlCollection( controlElements ) 
 
+# Run validation on any element. Useful mostly for testing
 Factory.validate = elValid
 
+# This is the only way to set validations, they're not available directly
 Factory.addValidation = ( name, fn ) ->
   if controlValidations[ name ]
     return false
-  controlValidations[ name ] = fn  
+  controlValidations[ name ] = fn
 
+# Allow access to validation functions w/o letting them be altered
 Factory.getValidations = -> controlValidations
+
+# expose the ControlCollection constructor
+Factory.init = ControlCollection
 
 window.Controls = Factory

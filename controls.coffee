@@ -249,7 +249,7 @@ class window.ValueObject extends Array
   idArray: ->
     @map ( pair ) -> pair.id
 
-  keyValue: ->
+  idValuePair: ->
     o = {}
     o[ pair.id ] = pair.value for pair in @
     o
@@ -330,7 +330,7 @@ class ControlCollection extends Array
   # Delegates to elClear to clear values
   # Triggers "change" event on any control whose value actually changes
   # TODO: Any way to revert to hardcoded default values (value="xyz")?
-  clear: ( param ) ->
+  clear: ->
     for control in @
       control.dispatchEvent( changedEvent() ) if elClear( control )
     @
@@ -482,6 +482,8 @@ Factory.getValidations = ->
 
 # expose the ControlCollection constructor
 Factory.init = ControlCollection
+
+Factory.valueInit = ValueObject
 
 # expose factory as the namespace
 window.Controls = Factory

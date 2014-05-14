@@ -46,11 +46,11 @@
     ]), ".normal() looks good, and .serialize() by extension");
     equal(JSON.stringify(values.valueArray()), JSON.stringify(["check", "text", "option3"]), ".valueArray() looks good");
     equal(JSON.stringify(values.idArray()), JSON.stringify(["mixedCheck", "mixedText", "mixedSelect"]), ".idArray() looks good");
-    equal(JSON.stringify(values.keyValue()), JSON.stringify({
+    equal(JSON.stringify(values.idValuePair()), JSON.stringify({
       "mixedCheck": "check",
       "mixedText": "text",
       "mixedSelect": "option3"
-    }), ".keyValue() looks good");
+    }), ".idValuePair() looks good");
     equal(values.valueString(), "check, text, option3", ".valueString() default looks good");
     equal(values.valueString("---"), "check---text---option3", "valueString() with custom delimiter looks good");
     equal(values.at(1), "text", ".at() looks good");
@@ -328,7 +328,7 @@
   });
 
   test("External", function() {
-    var a, b, c, d, e, noop;
+    var a, b, c, d, e, mixedControls, noop, vals;
     noop = function() {};
     a = Controls.getValidations();
     a.radio = noop;
@@ -340,7 +340,23 @@
     equal("noop" in d, false, "Can't add controlValidations directly.");
     Controls.addValidation("noop", noop);
     e = Controls.getValidations();
-    return equal("noop" in e, true, "Can add controlValidations through addValidation()");
+    equal("noop" in e, true, "Can add controlValidations through addValidation()");
+    mixedControls = Controls("#mixed-controls");
+    equal(mixedControls.constructor, Controls.init, "ControlCollection constructor is exposed as Controls.init");
+    equal(Object.getPrototypeOf(mixedControls), Controls.init.prototype, "ControlCollection prototype is exposed as Controls.init.prototype");
+    equal(mixedControls instanceof Controls.init, true, "instances of ControlCollection pass instanceof with Controls.init");
+    Controls.init.prototype.newCollectionMethod = function() {
+      return true;
+    };
+    equal(mixedControls.newCollectionMethod(), true, "Methods added to Controls.init.prototype are avaialble to ControlCollection instances");
+    vals = mixedControls.value();
+    equal(vals.constructor, Controls.valueInit, "ValueObject constructor is exposed as Controls.valueInit");
+    equal(Object.getPrototypeOf(vals), Controls.valueInit.prototype, "ValueObject prototype exposed as Controls.valueInit.prototype.");
+    equal(vals instanceof Controls.valueInit, true, "instances of ValueObject pass instanceof with Controls.valueInit");
+    Controls.valueInit.prototype.newValueMethod = function() {
+      return true;
+    };
+    return equal(vals.newValueMethod(), true, "Methods added to Controls.valueInit.prototype are avaialble to ControlCollection instances");
   });
 
 }).call(this);

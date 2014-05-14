@@ -312,7 +312,7 @@
       });
     };
 
-    ValueObject.prototype.keyValue = function() {
+    ValueObject.prototype.idValuePair = function() {
       var o, pair, _i, _len;
       o = {};
       for (_i = 0, _len = this.length; _i < _len; _i++) {
@@ -440,7 +440,7 @@
       }));
     };
 
-    ControlCollection.prototype.clear = function(param) {
+    ControlCollection.prototype.clear = function() {
       var control, _i, _len;
       for (_i = 0, _len = this.length; _i < _len; _i++) {
         control = this[_i];
@@ -621,6 +621,8 @@
   };
 
   Factory.init = ControlCollection;
+
+  Factory.valueInit = ValueObject;
 
   window.Controls = Factory;
 

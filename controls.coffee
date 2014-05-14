@@ -128,6 +128,8 @@ controlValidations = do ->
 # tries to use [data-control-validation] with .validity as a fallback
 elValid = do ->
 
+  # TODO IMPORTANT: Add function to split composed validations by && / ||
+
   getMethod = ( str ) ->
     str?.split( "(" )[0]
 
@@ -200,12 +202,15 @@ elClear = ( el ) ->
     if el.value
       el.value = ""
       changed = true
+
+  # lets ControlCollection::clear know if the value did in fact change   
   return changed
 
 
 
 # Functions to generate events we'll be triggering often.
 # If addding event id's, change to "new CustomEvent", and use details: {}
+# TODO: create general event producer to ensure all events bubble?
 validEvent = -> new Event "valid", 
   bubbles: true
 
@@ -216,7 +221,8 @@ changedEvent = -> new Event "changed",
   bubbles: true
 
 
-
+# Return value of ControlCollection::value() is an instance of this class
+# Has handy methods for transforming value into more palatable structure
 class window.ValueObject extends Array
   constructor: ( arr ) ->
     if Array.isArray( arr )
@@ -282,6 +288,8 @@ class ControlCollection extends Array
   valid: ->
     every @, ( el ) -> elValid( el )
 
+  # filter controls and return result as ControlCollection
+  # if passed a string, uses it as a CSS selector to match against controls
   filter : ->
     args = slice( arguments )
     if typeof args[0] is "string"
@@ -290,6 +298,7 @@ class ControlCollection extends Array
         control.matches( selector )
     new ControlCollection Array::filter.apply( @, args )
 
+  # inverse of @filter
   not: ->
     args = slice( arguments )
     fn = args.shift()
@@ -300,19 +309,25 @@ class ControlCollection extends Array
     args.unshift( notFn )
     new ControlCollection Array::filter.apply( @, args )
 
+  # filter shorthand for tagName
   tag: ( tag ) ->
     new ControlCollection @filter ( el ) ->
       el.tagName.toLowerCase() is tag.toLowerCase
 
+  # filter shorthand for type
   type: ( type ) ->
     new ControlCollection @filter ( el ) ->
       el.type.toLowerCase() is type.toLowerCase()
 
+  # Delegates to elClear to clear values
+  # Triggers "change" event on any control whose value actually changes
+  # TODO: Any way to revert to hardcoded default values (value="xyz")?
   clear: ( param ) ->
     for control in @
       control.dispatchEvent( changedEvent() ) if elClear( control )
     @
 
+  # these do nothing if no param is passed.
   disabled: ( param ) ->
     return @ unless param?
     control.disabled = !!param for control in @
@@ -329,6 +344,11 @@ class ControlCollection extends Array
       control.checked = !!param if "checked" of control
     @
 
+  # add an event listener.
+  # Adds listener to document and checks matching events to see if 
+  # their target is in this collection
+  # Returns the listener b/c it's bound to collection and can't be saved
+  # for later removal otherwise
   on: ( eventType, handler ) ->
     @setValidityListener() if eventType is "valid"
     eventHandler = ( event ) =>
@@ -337,6 +357,7 @@ class ControlCollection extends Array
     document.addEventListener( eventType, eventHandler )
     eventHandler
 
+  # Remove a previously attached event listener.
   off: ( eventType, handler ) ->
     document.removeEventListener( eventType, handler )
   
@@ -349,7 +370,8 @@ class ControlCollection extends Array
         detail: {}
     @[0].dispatchEvent( evt )
 
-
+  # call a function or method on each control
+  # function is called in context of control
   invoke: ( fn, args... ) ->
     for control in @
       if typeof fn is "string"

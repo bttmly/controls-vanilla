@@ -173,7 +173,12 @@
   })();
 
   elValid = (function() {
-    var getArgs, getMethod;
+    var getArgs, getMethod, splitMethods;
+    splitMethods = function(str) {
+      return str != null ? str.split("&&").map(function(m) {
+        return m != null ? m.trim() : void 0;
+      }) : void 0;
+    };
     getMethod = function(str) {
       return str != null ? str.split("(")[0] : void 0;
     };
@@ -184,18 +189,24 @@
       }) : void 0 : void 0;
     };
     return function(el, customFn) {
-      var args, attr, method, sigLength;
+      var attr, composed;
       if (customFn) {
         return customFn(el);
       } else if ((attr = el.dataset.controlValidation)) {
-        method = getMethod(attr);
-        args = getArgs(attr) || [];
-        sigLength = controlValidations[method].length;
-        args.length = sigLength === 0 ? 0 : sigLength - 1;
-        args.push(el);
-        if (method in controlValidations) {
-          return controlValidations[method].apply(null, args);
-        }
+        composed = splitMethods(attr);
+        return composed.every(function(str) {
+          var args, method, sigLength;
+          method = getMethod(str);
+          args = getArgs(str) || [];
+          sigLength = controlValidations[method].length;
+          args.length = sigLength === 0 ? 0 : sigLength - 1;
+          args.push(el);
+          if (method in controlValidations) {
+            return controlValidations[method].apply(null, args);
+          } else {
+            return false;
+          }
+        });
       } else {
         return el.validity.valid;
       }

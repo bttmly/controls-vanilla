@@ -67,7 +67,7 @@
   });
 
   test("Valid", function() {
-    var allowed, allowedFalse, alphanumeric, alphanumericFalse, checks, email, emailFalse, isValue, isValueFalse, lengthBetween, lengthBetweenFalse, lengthIs, lengthIsFalse, lengthMax, lengthMaxFalse, lengthMin, lengthMinFalse, letters, lettersFalse, list, listFalse, notAllowed, notAllowedFalse, notEmpty, notEmptyFalse, notEmptyTrim, notEmptyTrimFalse, numberBetween, numberBetweenFalse, numberMax, numberMaxFalse, numberMin, numberMinFalse, numeric, numericFalse, phone, phoneFalse, radios;
+    var allowed, allowedFalse, alphanumeric, alphanumericFalse, checks, composed, email, emailFalse, isValue, isValueFalse, lengthBetween, lengthBetweenFalse, lengthIs, lengthIsFalse, lengthMax, lengthMaxFalse, lengthMin, lengthMinFalse, letters, lettersFalse, list, listFalse, notAllowed, notAllowedFalse, notEmpty, notEmptyFalse, notEmptyTrim, notEmptyTrimFalse, numberBetween, numberBetweenFalse, numberMax, numberMaxFalse, numberMin, numberMinFalse, numeric, numericFalse, phone, phoneFalse, radios;
     notEmpty = gebi("notEmpty");
     notEmptyTrim = gebi("notEmptyTrim");
     numeric = gebi("numeric");
@@ -152,7 +152,13 @@
     equal(Controls.validate(checks[1]), true, "Checkbox should validate if >= 'min' matching it's name are checked");
     equal(Controls.validate(checks[2]), true, "Checkbox should validate if <= 'max' matching it's name are checked");
     checks[1].checked = true;
-    return equal(Controls.validate(checks[2]), false, "Checkbox should not validate if >= 'max' matching it's name are checked");
+    equal(Controls.validate(checks[2]), false, "Checkbox should not validate if >= 'max' matching it's name are checked");
+    composed = gebi("composed1");
+    equal(Controls.validate(composed), false, "Composed validation should fail if none match");
+    composed.value = 1234567890;
+    equal(Controls.validate(composed), false, "Composed validation should fail if any don't match");
+    composed.value = 123456;
+    return equal(Controls.validate(composed), true, "Composed validation should succeed only if all match");
   });
 
   test("Filtering", function() {

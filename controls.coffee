@@ -41,9 +41,9 @@ controlValidations = do ->
 
   # nice short namespace by which validations refer to each other.
   v = 
-    notEmpty : ( el ) -> !!el.value
+    notEmpty: ( el ) -> !!el.value
 
-    notEmptyTrim : ( el ) -> !!el.value.trim()
+    notEmptyTrim: ( el ) -> !!el.value.trim()
 
     numeric: ( el ) -> /^\d+$/.test el.value
 
@@ -220,17 +220,22 @@ elClear = ( el ) ->
 
 
 
-# Functions to generate events we'll be triggering often.
+# Functions to generate and emit events we'll be using often.
 # If addding event id's, change to "new CustomEvent", and use details: {}
 # TODO: create general event producer to ensure all events bubble?
-validEvent = -> new Event "valid", 
-  bubbles: true
+event = ( type ) -> new Event type, bubbles: true
 
-invalidEvent = -> new Event "invalid",
-  bubbles: true
+trigger = ( target, type ) ->
+  evt = event( type )
+  method = if "trigger" of target then "trigger" else "dispatchEvent"
+  target[ method ]( evt )
 
-changedEvent = -> new Event "changed",
-  bubbles: true
+validEvent = -> event( "valid" )
+
+invalidEvent = -> event( "invalid" )
+
+changeEvent = -> event( "change" )
+  
 
 
 # Return value of ControlCollection::value() is an instance of this class
@@ -303,7 +308,7 @@ class ControlCollection extends Array
 
   # filter controls and return result as ControlCollection
   # if passed a string, uses it as a CSS selector to match against controls
-  filter : ->
+  filter: ->
     args = slice( arguments )
     if typeof args[0] is "string"
       selector = args[0]
@@ -334,10 +339,10 @@ class ControlCollection extends Array
 
   # Delegates to elClear to clear values
   # Triggers "change" event on any control whose value actually changes
-  # TODO: Any way to revert to hardcoded default values (value="xyz")?
+  # Should use el.defaultValue?
   clear: ->
     for control in @
-      control.dispatchEvent( changedEvent() ) if elClear( control )
+      control.dispatchEvent( changeEvent() ) if elClear( control )
     @
 
   # these do nothing if no param is passed.
@@ -351,10 +356,15 @@ class ControlCollection extends Array
     control.required = !!param for control in @
     @
 
+  # TODO add test
   checked: ( param ) ->
     return @ unless param?
+    param = !!param
     for control in @
-      control.checked = !!param if "checked" of control
+      if control.matches( "[type='radio'], [type='checkbox']" )
+        unless control.checked is param
+          control.checked = param
+          trigger( control, "change" )
     @
 
   # add an event listener.
@@ -378,7 +388,7 @@ class ControlCollection extends Array
   
   # Remove all listeners for a given event type, or if no type is passed,
   # all listeners on the collection.
-  offAll : ( eventType ) ->
+  offAll: ( eventType ) ->
     list = if eventType then [ eventType ] else Object.keys( @_eventListeners )
     each list, ( type ) =>
       listeners = @_eventListeners[ type ] or []
@@ -387,7 +397,7 @@ class ControlCollection extends Array
 
   # Super jank at the moment, but avoids triggering it on each element.
   # to do: use detail.id w/ array of already handled events to avoid this.
-  trigger : ( evt ) ->
+  trigger: ( evt ) ->
     unless evt instanceof Event
       evt = new CustomEvent evt,
         bubbles: true
@@ -422,15 +432,15 @@ class ControlCollection extends Array
       a.push( o )
     new ValueObject( a )
 
-  
-  setValidityListener : ->
-    # Will only set validity listeners once per collection.
+
+  # TODO add test for invalid event.
+  # Will only set validity listeners once per collection.
+  setValidityListener: ->
     unless @_validityListener
       @_validityListener = true
-      @on "change", ( event ) ->
-        if @valid() then @trigger validEvent() else @trigger invalidEvent()
-      @on "input", ( event ) ->
-        if @valid() then @trigger validEvent() else @trigger invalidEvent() 
+      listener = -> @trigger( if @valid() then validEvent() else invalidEvent() )
+      @on "change", listener
+      @on "input", listener
       setTimeout =>
         @trigger "change"
       0

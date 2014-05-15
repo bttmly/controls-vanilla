@@ -219,7 +219,7 @@
   });
 
   test("Property setting", function() {
-    var check, mixedControls, select, text;
+    var check, mixedControls, select, text, timesChanged;
     mixedControls = Controls("#mixed-controls");
     check = qs("#mixed-controls [type='checkbox']");
     text = qs("#mixed-controls [type='text']");
@@ -246,12 +246,21 @@
     equal(mixedControls.every(function(c) {
       return !c.required;
     }), true, "All controls not required again after .required( false )");
+    timesChanged = 0;
+    mixedControls.on("change", function(evt) {
+      console.log(evt.target);
+      return ++timesChanged;
+    });
     equal(check.checked, false, "Checkbox initially unchecked");
     mixedControls.checked(true);
+    mixedControls.checked(true);
     equal(check.checked, true, "Checkbox checked after .checked( true )");
+    equal(timesChanged, 1, "Using .checked( true ) triggers a change event only if checked changes");
     equal((__indexOf.call(text, "checked") >= 0), false, "No 'checked' property added to other types of inputs.");
     mixedControls.checked(false);
-    return equal(check.checked, false, "Checkbox again unchecked after .checked( false )");
+    mixedControls.checked(false);
+    equal(check.checked, false, "Checkbox again unchecked after .checked( false )");
+    return equal(timesChanged, 2, "Using checked( false ) triggers a change event only if checked changes");
   });
 
   test("Events", function() {

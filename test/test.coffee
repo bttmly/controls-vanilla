@@ -234,12 +234,21 @@ test "Property setting", ->
   mixedControls.required( false )
   equal ( mixedControls.every ( c ) -> !c.required ), true, "All controls not required again after .required( false )"
 
+  timesChanged = 0
+  mixedControls.on "change", ( evt )->
+    console.log evt.target
+    ++timesChanged
+
   equal ( check.checked ), false, "Checkbox initially unchecked"
   mixedControls.checked( true )
+  mixedControls.checked( true )  
   equal ( check.checked ), true, "Checkbox checked after .checked( true )"
+  equal timesChanged, 1, "Using .checked( true ) triggers a change event only if checked changes"
   equal ( "checked" in text ), false, "No 'checked' property added to other types of inputs."
   mixedControls.checked( false )
+  mixedControls.checked( false )
   equal ( check.checked ), false, "Checkbox again unchecked after .checked( false )"
+  equal timesChanged, 2, "Using checked( false ) triggers a change event only if checked changes"
 
 test "Events", ->
   mixedControls = Controls( "#mixed-controls" )

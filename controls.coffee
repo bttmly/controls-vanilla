@@ -16,12 +16,6 @@ slice = Function::call.bind( Array::slice )
 every = Function::call.bind( Array::every )
 filter = Function::call.bind( Array::filter )
 
-remove = ( arr, val ) ->
-  idx = arr.indexOf( value )
-  if idx > 0
-    arr.splice( idx, 1 )
-  arr
-
 # Extend/clone
 extend = ( out ) ->
   out or= {}
@@ -74,7 +68,7 @@ controlValidations = do ->
     
     radio: ( el ) ->
       if ( name = el.name )
-        $_( "input[type='radio'][name='#{name}']" ).some ( input ) -> input.checked
+        return $_( "input[type='radio'][name='#{name}']" ).some ( input ) -> input.checked
       # won't validate unnamed radios
       else
         false
@@ -86,6 +80,10 @@ controlValidations = do ->
       # will validate unnamed checkboxes
       else
         true
+
+    select: ( min = 1, max = 1, el ) ->
+      selected = filter el, ( opt ) -> opt.selected and not opt.disabled
+      if min <= selected.length <= max then true else false
 
     allowed: ( allowedChars, el ) ->
         allowedChars = allowedChars.split( "" )
@@ -377,9 +375,7 @@ class ControlCollection extends Array
   # Remove a previously attached event listener.
   off: ( eventType, handler ) ->
     document.removeEventListener( eventType, handler )
-    listeners = @_eventListeners[ eventType ] or []
-    remove( listeners, handler )
-
+  
   # Remove all listeners for a given event type, or if no type is passed,
   # all listeners on the collection.
   offAll : ( eventType ) ->
@@ -397,6 +393,8 @@ class ControlCollection extends Array
         bubbles: true
         detail: {}
     @[0].dispatchEvent( evt )
+
+
 
   # call a function or method on each control
   # function is called in context of control
@@ -433,8 +431,9 @@ class ControlCollection extends Array
         if @valid() then @trigger validEvent() else @trigger invalidEvent()
       @on "input", ( event ) ->
         if @valid() then @trigger validEvent() else @trigger invalidEvent() 
-      @trigger "change"
-
+      setTimeout =>
+        @trigger "change"
+      0
 
 Factory = do ->
 

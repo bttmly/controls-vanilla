@@ -68,7 +68,7 @@ controlValidations = do ->
     
     radio: ( el ) ->
       if ( name = el.name )
-        $_( "input[type='radio'][name='#{name}']" ).some ( input ) -> input.checked
+        return $_( "input[type='radio'][name='#{name}']" ).some ( input ) -> input.checked
       # won't validate unnamed radios
       else
         false
@@ -80,6 +80,10 @@ controlValidations = do ->
       # will validate unnamed checkboxes
       else
         true
+
+    select: ( min = 1, max = 1, el ) ->
+      selected = filter el, ( opt ) -> opt.selected and not opt.disabled
+      if min <= selected.length <= max then true else false
 
     allowed: ( allowedChars, el ) ->
         allowedChars = allowedChars.split( "" )
@@ -427,8 +431,9 @@ class ControlCollection extends Array
         if @valid() then @trigger validEvent() else @trigger invalidEvent()
       @on "input", ( event ) ->
         if @valid() then @trigger validEvent() else @trigger invalidEvent() 
-      @trigger "change"
-
+      setTimeout =>
+        @trigger "change"
+      0
 
 Factory = do ->
 

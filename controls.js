@@ -121,6 +121,23 @@
           return true;
         }
       },
+      select: function(min, max, el) {
+        var selected, _ref;
+        if (min == null) {
+          min = 1;
+        }
+        if (max == null) {
+          max = 1;
+        }
+        selected = filter(el, function(opt) {
+          return opt.selected && !opt.disabled;
+        });
+        if ((min <= (_ref = selected.length) && _ref <= max)) {
+          return true;
+        } else {
+          return false;
+        }
+      },
       allowed: function(allowedChars, el) {
         var char, str, _i, _len;
         allowedChars = allowedChars.split("");
@@ -593,7 +610,12 @@
             return this.trigger(invalidEvent());
           }
         });
-        return this.trigger("change");
+        setTimeout((function(_this) {
+          return function() {
+            return _this.trigger("change");
+          };
+        })(this));
+        return 0;
       }
     };
 

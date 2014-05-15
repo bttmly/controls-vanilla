@@ -200,9 +200,10 @@
     #console-output {
       color: springgreen;
       background: #333;
-      height: -webkit-calc(100% - 4em);
-      height: calc(100% - 4em);
+      height: -webkit-calc(100% - 8em);
+      height: calc(100% - 8em);
       overflow-y: scroll;
+      margin-bottom: 1rem;
     }
 
     #console-output pre {
@@ -298,9 +299,19 @@
     </div>
 
     <div class="console-pane">
-      <div id="console-output">
-      </div>
+      <div id="console-output"></div>
       <button id="clear-console-button">Clear</button>
+      
+      <label for="value-method-select">Value output mode</label>
+      <select id="value-method-select">
+        <option selected>normal</option>
+        <option>valueArray</option>
+        <option>valueArrayOne</option>
+        <option>idArray</option>
+        <option>idArrayOne</option>
+        <option>valueIdPair</option>
+        <option>valueString</option>
+      </select>      
     </div>
 
     
@@ -327,7 +338,6 @@
         this.el.scrollTop = this.el.scrollHeight;
         return this;
       };
-
       var clearButton = document.querySelector( "#clear-console-button" );
       clearButton.addEventListener( "click", function( event ) {
         Log.erase();
@@ -338,57 +348,37 @@
       };
 
       window.checkControls = Controls( "#checkbox-wrapper" );
-      checkControls.on( "valid", function() {
-        setValidClass( "checkbox-wrapper", true );
-      });
-      checkControls.on( "invalid", function() { 
-        setValidClass( "checkbox-wrapper", false );
-      });
-
       window.radioControls = Controls( "#radio-wrapper" );
-      radioControls.on( "valid", function() {
-        setValidClass( "radio-wrapper", true );
-      });
-      radioControls.on( "invalid", function() { 
-        setValidClass( "radio-wrapper", false );
-      });
-
-      window.textControls = Controls( "#text-fields-wrapper" );
-      textControls.on( "valid", function() {
-        setValidClass( "text-fields-wrapper", true );
-      });
-      textControls.on( "invalid", function() { 
-        setValidClass( "text-fields-wrapper", false );
-      });
-
-      window.singleSelectControl = Controls( "#single-select-wrapper" );
-      singleSelectControl.on( "valid", function() {
-        setValidClass( "single-select-wrapper", true );
-      });
-      singleSelectControl.on( "invalid", function() {
-        setValidClass( "single-select-wrapper", false );
-      });
-
+      window.textControls = Controls( "#text-fields-wrapper" );      
       window.buttonControls = Controls( "#button-wrapper" );
-      buttonControls.on( "valid", function() {
-        setValidClass( "button-wrapper", true );
-      });
-      buttonControls.on( "invalid", function() {
-        setValidClass( "button-wrapper", false );
-      });
+      window.singleSelectControl = Controls( "#single-select-wrapper" );
 
-      // window.multiSelectControl = Controls( "#multi-select-wrapper" );
-
-      var collections = [
-        checkControls,
-        radioControls,
-        textControls,
-        singleSelectControl,
-        buttonControls
+      var ctlCols = [
+        { elId: "checkbox-wrapper", col: checkControls },
+        { elId: "radio-wrapper", col: radioControls },
+        { elId: "text-fields-wrapper", col: textControls },
+        { elId: "single-select-wrapper", col: singleSelectControl },
+        { elId: "button-wrapper", col: buttonControls }
       ];
 
-      window.masterCollection = Controls( collections );
+      window.masterCollection = Controls( ctlCols.map(function( c ){ return c.col }) );
 
+      var methodSelect = gebi( "value-method-select" );
+      ctlCols.forEach(function( c ) {
+        c.col.on( "valid", function() {
+          setValidClass( c.elId, true );
+        });
+        c.col.on( "invalid", function() {
+          setValidClass( c.elId, false )
+        });
+        setTimeout( function() {
+          c.col.on( "change", function() {
+            method = methodSelect.value;
+            var str = JSON.stringify( this.value()[ methodSelect.value ]() );
+            Log.print( str );
+          });
+        }, 0)
+      });
 
 
     }).call( this );

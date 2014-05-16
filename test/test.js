@@ -31,7 +31,7 @@
     };
   };
 
-  test("Value", function() {
+  test("Value Object", function() {
     var check, mixedControls, select, text, values;
     mixedControls = Controls("#mixed-controls");
     check = qs("#mixed-controls [type='checkbox']");

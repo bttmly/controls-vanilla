@@ -13,7 +13,7 @@ inc = ->
   i = 0
   -> ++i
 
-test "Value", ->
+test "Value Object", ->
   mixedControls = Controls( "#mixed-controls" )
   check = qs( "#mixed-controls [type='checkbox']" )
   text = qs( "#mixed-controls [type='text']" )

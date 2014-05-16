@@ -16,6 +16,23 @@ slice = Function::call.bind( Array::slice )
 every = Function::call.bind( Array::every )
 filter = Function::call.bind( Array::filter )
 
+# In-place removal of elements matching test.
+removeWhere = ( arr, test ) ->
+  i = 0
+  while i < arr.length
+    if test( arr[i] )
+      arr.splice( i, 1 )
+      i = -1
+    i += 1
+  arr
+
+find = ( arr, test ) ->
+  i = 0
+  while i < arr.length
+    return arr[i] if test( arr[i] )
+    i += 1
+  false
+
 # Extend/clone
 extend = ( out ) ->
   out or= {}
@@ -223,18 +240,29 @@ elClear = ( el ) ->
 # Functions to generate and emit events we'll be using often.
 # If addding event id's, change to "new CustomEvent", and use details: {}
 # TODO: create general event producer to ensure all events bubble?
-event = ( type ) -> new Event type, bubbles: true
+eventId = do ->
+  counter = 0
+  ->
+    counter += 1
 
-trigger = ( target, type ) ->
-  evt = event( type )
+makeEvent = ( type ) ->
+  console.log type
+  new CustomEvent type, 
+    bubbles: true
+    detail:
+      id: eventId()
+
+trigger = ( target, evt ) ->
+  throw new TypeError( "Pass an event!" ) unless evt instanceof Event
+  # evt = makeEvent( evt ) unless evt instanceof Event
   method = if "trigger" of target then "trigger" else "dispatchEvent"
   target[ method ]( evt )
 
-validEvent = -> event( "valid" )
+validEvent = -> makeEvent( "valid" )
 
-invalidEvent = -> event( "invalid" )
+invalidEvent = -> makeEvent( "invalid" )
 
-changeEvent = -> event( "change" )
+changeEvent = -> makeEvent( "change" )
   
 
 
@@ -243,13 +271,13 @@ changeEvent = -> event( "change" )
 class window.ValueObject extends Array
   constructor: ( arr ) ->
     if Array.isArray( arr )
-      [].push.apply( @, arr )
+      [].push.apply( this, arr )
     else
       throw new TypeError( "Pass an array to the ValueObject constructor!" )
 
   normal: ->
     arr = []
-    [].push.apply( arr, @ )
+    [].push.apply( arr, this )
     arr
 
   valueArray: ->
@@ -260,7 +288,7 @@ class window.ValueObject extends Array
 
   idValuePair: ->
     o = {}
-    o[ pair.id ] = pair.value for pair in @
+    o[ pair.id ] = pair.value for pair in this
     o
 
   valueString: ( delimiter = ", " ) ->
@@ -288,13 +316,20 @@ class ControlCollection extends Array
   constructor: ( elements ) ->
     @_setValidityListener = false
     @_eventListeners = {}
-    [].push.apply( @, elements )
+    [].push.apply( this, elements )
 
-  value: ->
-    # consider IF and HOW to handle get/set signatures
-    # if arguments.length then return @setValue( arguments ) else @getValue()
+  # .value(), .data(), and .prop() all behave similarly.
+  # They have get and set call signatures and return ValueObjects
+  #
+  # Zero arguments: "get" signature
+  # One argument: "set" signature
+  value: ( param ) ->
+    if param then @_setValue( param ) else @_getValue()
+
+  # internal. Used for "get" signature of .value()
+  _getValue: ->
     values = []
-    for control in @
+    for control in this
       v = elValue( control )
       if v
         o = {}
@@ -303,8 +338,60 @@ class ControlCollection extends Array
         values.push( o )
     new ValueObject( values )
 
+  # internal. Used for "set" signature of .value()
+  _setValue: ( param ) ->
+    for control in this
+      control.value = param if "value" of control
+    this
+
+  # One argument: "get" signature
+  # Two arguments: "set" signature
+  data: ( attr, val ) ->
+    if val then @_setData( attr, val ) else @_getData( attr )
+
+  # internal. Used for "get" signature of .data()
+  _getData: ( attr ) ->
+    data = []
+    for control in this
+      o = {}
+      o.id = control.id
+      o.value = control.dataset[ attr ]
+      values.push( o )
+    new ValueObject( data )
+
+  # internal. Used for "set" signature of .data()
+  _setData: ( attr, val ) ->
+    for control in this
+      control.dataset[ attr ] = val
+    this
+
+  # One argument: "get" signature
+  # Two arguments: "set" signature
+  prop: ( prop, val ) ->
+    if prop is "value"
+      return @value.apply( this, arguments )
+    else
+      if val then @_setData( attr, val ) else @_getData( attr )
+
+  # internal. Used for "set" signature of .prop()
+  _getProp: ( prop ) ->
+    data = []
+    for control in this
+      o = {}
+      o.id = control.id
+      o.value = control[ attr ]
+      values.push( o )
+    new ValueObject( data )
+
+  # internal. Used for "set" signature of .prop()
+  _setProp: ( prop, val ) ->
+    for control in this
+      control[ attr ] = val if prop of control
+    this
+
+
   valid: ->
-    every @, ( el ) -> elValid( el )
+    @every ( el ) -> elValid( el )
 
   # filter controls and return result as ControlCollection
   # if passed a string, uses it as a CSS selector to match against controls
@@ -314,7 +401,7 @@ class ControlCollection extends Array
       selector = args[0]
       args[0] = ( control ) ->
         control.matches( selector )
-    new ControlCollection Array::filter.apply( @, args )
+    new ControlCollection Array::filter.apply( this, args )
 
   # inverse of @filter
   not: ->
@@ -325,7 +412,7 @@ class ControlCollection extends Array
     else
       notFn = ( e ) -> !fn( e )
     args.unshift( notFn )
-    new ControlCollection Array::filter.apply( @, args )
+    new ControlCollection Array::filter.apply( this, args )
 
   # filter shorthand for tagName
   tag: ( tag ) ->
@@ -341,49 +428,57 @@ class ControlCollection extends Array
   # Triggers "change" event on any control whose value actually changes
   # Should use el.defaultValue?
   clear: ->
-    for control in @
+    for control in this
       control.dispatchEvent( changeEvent() ) if elClear( control )
-    @
+    this
 
   # these do nothing if no param is passed.
   disabled: ( param ) ->
-    return @ unless param?
-    control.disabled = !!param for control in @
-    @
+    return this unless param?
+    control.disabled = !!param for control in this
+    this
 
   required: ( param ) ->
-    return @ unless param?
-    control.required = !!param for control in @
-    @
+    return this unless param?
+    control.required = !!param for control in this
+    this
 
-  # TODO add test
   checked: ( param ) ->
-    return @ unless param?
+    return this unless param?
     param = !!param
-    for control in @
+    for control in this
       if control.matches( "[type='radio'], [type='checkbox']" )
         unless control.checked is param
           control.checked = param
           trigger( control, "change" )
-    @
+    this
 
-  # add an event listener.
   # Adds listener to document and checks matching events to see if 
   # their target is in this collection
   # Returns the listener b/c it's bound to collection and can't be saved
   # for later removal otherwise
   on: ( eventType, handler ) ->
-    @setValidityListener() if eventType is "valid"
-    eventHandler = ( event ) =>
-      if event.target in @
-        handler.bind( @ )( event )
+    @setValidityListener() if eventType is "valid" or eventType is "invalid"
+    
+    eventHandler = ( ( event ) ->
+      if event.target in this
+        if ( id = event.detail?.id )
+          listener = find @_eventListeners[ eventType ], ( l ) -> l.handler = eventHandler
+          if listener and ( id in listener.eventIds )
+            console.log listener
+            return 
+          listener.eventIds.push( id )
+        handler.call( this, event )
+    ).bind( this )
+
     document.addEventListener( eventType, eventHandler )
     @_eventListeners[ eventType ] or= []
-    @_eventListeners[ eventType ].push( eventHandler )
+    @_eventListeners[ eventType ].push( { handler: eventHandler, eventIds: [] } )
     eventHandler
 
   # Remove a previously attached event listener.
   off: ( eventType, handler ) ->
+    removeWhere ( @_eventListeners[ eventType ] or [] ), ( o ) -> o.handler is handler
     document.removeEventListener( eventType, handler )
   
   # Remove all listeners for a given event type, or if no type is passed,
@@ -396,42 +491,29 @@ class ControlCollection extends Array
         @off( type, fn )
 
   # Super jank at the moment, but avoids triggering it on each element.
-  # to do: use detail.id w/ array of already handled events to avoid this.
+  # TODO: figure out a nice way to let a handler be called at most once
+  # for a given event.
   trigger: ( evt ) ->
-    unless evt instanceof Event
-      evt = new CustomEvent evt,
-        bubbles: true
-        detail: {}
-    @[0].dispatchEvent( evt )
-
-
+    evt = makeEvent( evt ) unless evt instanceof Event
+    trigger( control, evt ) for control in this
+    this
 
   # call a function or method on each control
   # function is called in context of control
   invoke: ( fn, args... ) ->
-    for control in @
+    for control in this
       if typeof fn is "string"
         if fn of control and isFunction control[fn]
           control[fn]( args )
       else if isFunction( fn )
         fn.apply( control, args )
-    @
+    this
 
   labels: ->
     labels = []
-    for control in @
+    for control in this
       [].push.apply( labels, control.labels )
     labels
-
-  mapIdToProp: ( prop ) ->
-    a = []
-    for control in @
-      o = {}
-      o.id = control.id
-      o[prop] = control[prop]
-      a.push( o )
-    new ValueObject( a )
-
 
   # TODO add test for invalid event.
   # Will only set validity listeners once per collection.
@@ -443,7 +525,7 @@ class ControlCollection extends Array
       @on "input", listener
       setTimeout =>
         @trigger "change"
-      0
+      , 0
 
 Factory = do ->
 
@@ -489,7 +571,7 @@ Factory = do ->
 # Run validation on any element. Useful mostly for testing
 Factory.validate = elValid
 
-# This is the only way to set validations, they're not available directly
+# This is how to set validations; the object isn't exposed directly.
 Factory.addValidation = ( name, fn ) ->
   if controlValidations[ name ]
     return false

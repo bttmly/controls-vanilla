@@ -383,7 +383,11 @@
     };
 
     ValueObject.prototype.at = function(i) {
-      return this[i].value;
+      if (isNaN(Number(i))) {
+        return this.idValuePair()[i];
+      } else {
+        return this[i].value;
+      }
     };
 
     ValueObject.prototype.first = function() {

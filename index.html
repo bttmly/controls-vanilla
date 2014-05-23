@@ -1,0 +1,391 @@
+<html>
+<head>
+  <title>JS Classes for HTML Inputs</title>
+  <link href='http://fonts.googleapis.com/css?family=Oxygen+Mono' rel='stylesheet' type='text/css'>
+  <style>
+
+*, *:before, *:after {
+   -moz-box-sizing:    border-box;   /* Firefox 1, probably can drop this */
+   -webkit-box-sizing: border-box;   /* Safari 3-4, also probably droppable */
+    box-sizing:        border-box;   /* Everything else */
+}
+
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      max-height: 100vh;
+    }
+
+    body {
+      font-family: "Lato", sans-serif;
+      font-weight: 300;
+      color: #333;
+      padding: 2em;
+      background: whitesmoke;
+    }
+
+    h1, h2, h3, h4, h5, h6, p {
+      margin: 0 0 1em 0;
+    }
+
+    input,
+    select,
+    button {
+      font-family: inherit;
+      font-weight: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+
+    input[type="text"],
+    input[type="radio"],
+    input[type="checkbox"],
+    input[type="button"],
+    button,
+    select {
+      -webkit-appearance: none;
+      border: 1px solid slategray;
+      box-shadow: 0 0 0 .5em transparent;
+      -webkit-transition: box-shadow .25s ease-in-out;
+      transition: box-shadow .25s ease-in-out;
+    }
+    input[type="text"]:focus,
+    input[type="radio"]:focus,
+    input[type="checkbox"]:focus,
+    input[type="button"]:focus,
+    button:focus,
+    select:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px slategray;
+    }
+
+    input[type="text"],
+    button,
+    select {
+      padding: .25em .5em;
+    }
+
+    select[multiple] {
+      padding: .5em;
+    }
+
+    select {
+      position: relative;
+      border-radius: 0;
+      width: 100%;
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+      -webkit-transition-property: background, box-shadow;
+      transition-property: background, box-shadow;
+    }
+
+    input[type="checkbox"] {
+      width: 1em;
+      height: 1em;
+      vertical-align: bottom;
+    }
+
+    input[type="radio"] {
+      width: 1em;
+      height: 1em;
+      border-radius: 50%;
+      position: relative;
+      top: .25em;
+      /*-webkit-transform: rotateZ(45deg);*/
+    }
+
+    input[type="radio"]:checked,
+    input[type="checkbox"]:checked {
+      background: lightslategray;
+    }
+
+    button {
+      background: transparent;
+    }
+
+    .wrapper {
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .wrapper > div {
+      width: -webkit-calc(50% - 2em);
+      width: calc(50% - 2em);
+    }
+
+    .wrapper > div:first-of-type {
+
+    }
+
+    .wrapper > div:last-of-type {
+
+    }
+
+    .input-pane input[type="text"] {
+      display: block;
+      width: 100%;
+    }
+
+    .input-pane input[type="text"] + input[type="text"] {
+      margin-top: 1em;
+    }
+
+    .control-wrapper {
+      margin: 0 0 2em 0;
+      padding: .5em;
+      background: rgba(231, 76, 60, 0.1);
+      border: 1px solid #aaa;
+      transition: background .3s ease-in-out;
+      position: relative;
+      box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .2);
+    }
+
+    .control-wrapper::after {
+      content: "INVALID";
+      color: rgba(231, 76, 60, 1);
+      font-size: 75%;
+      font-weight: bold;
+      position: absolute;
+      top: .5em;
+      right: .5em;
+    }
+
+    .control-wrapper.valid {
+      background: rgba(46, 204, 113, 0.1);
+    }
+    .control-wrapper.valid::after {
+      content: "VALID";
+      color: rgba(46, 204, 113, 1);
+    }
+
+    .control-wrapper p {
+      margin: 0 0 .5em 0;
+    }
+
+
+
+    input, label, button {
+      cursor: pointer;
+    }
+
+    input[disabled], button[disabled], select[disabled], label.disabled-label {
+      opacity: .5;
+    }
+
+    input[type='text'] {
+      cursor: text;
+    }
+
+    .input-pane label:after {
+      content: "";
+      display: block;
+    }
+
+    pre {
+      font-size: 16px;
+      font-family: "Oxygen Mono", monospace;
+    }
+
+    .console-pane {
+      font-family: "Oxygen Mono", monospace;
+      position: fixed;
+      top: 2em;
+      right: 2em;
+      width: 50%;
+      height: 100%;
+    }
+
+    #console-output {
+      color: springgreen;
+      background: #333;
+      height: -webkit-calc(100% - 8em);
+      height: calc(100% - 8em);
+      overflow-y: scroll;
+      margin-bottom: 1rem;
+    }
+
+    #console-output pre {
+      margin: 1em;
+    }
+
+    #clear-console-button {
+      font-family: "Inconsolata", monospace;
+      position: fixed;
+      color: springgreen;
+      border-color: springgreen;
+      top: 2em;
+      right: 4em;
+      background: #333;
+      margin: 1rem 0;
+    }
+    #clear-console-button:focus {
+      outline: 2px solid springgreen;
+    }
+
+    .block {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="input-pane" id="controls">
+
+      <div class="control-wrapper" id="checkbox-wrapper">
+        <p>Checkbox group.
+          <small class="block">Validates when all three are checked.</small>
+        </p>
+        <label>
+          <input type="checkbox" id="checkbox1" name="checkbox" value="bourbon" data-control-validation="checkbox(3,3)">
+          Bourbon
+        </label>
+        <label>
+          <input type="checkbox" id="checkbox2" name="checkbox" value="rye" data-control-validation="checkbox(3,3)">
+          Rye
+        </label>
+        <label>
+          <input type="checkbox" id="checkbox3" name="checkbox" value="scotch" data-control-validation="checkbox(3,3)">
+          Scotch
+        </label>
+      </div>
+
+
+      <div class="control-wrapper" id="radio-wrapper">
+        <p>Radio group.
+          <small class="block">Validates when any is checked</small>
+        </p>
+        <label>
+          <input type="radio" id="radio1" name="radio" value="neat" data-control-validation="radio">
+          Neat
+        </label>
+        <label>
+          <input type="radio" id="radio2" name="radio" value="rocks" data-control-validation="radio">
+          On the rocks
+        </label>
+        <label>
+          <input type="radio" id="radio3" name="radio" value="water" data-control-validation="radio">
+          With water
+        </label>
+      </div>
+
+      <div class="control-wrapper hash-test" id="text-fields-wrapper">
+        <p>Text validation
+          <small class="block">Check the placeholder text.</small>
+        </p>
+        <input id="numbers" type="text" placeholder="Numbers" data-control-validation="numeric">
+        <input id="letters" type="text" placeholder="Letters" data-control-validation="letters">
+        <input id="alphanumeric" type="text" placeholder="Alphanumeric" data-control-validation="alphanumeric">
+      </div>
+
+      <div class="control-wrapper" id="single-select-wrapper">
+        <p>Select validation
+          <small class="block">Validates when a non-disabled option is selected.</small>
+        </p>
+        <select id="single-select" data-control-validation="select">
+          <option selected disabled>Pick one...</option>
+          <option value="10-year">10 year</option>
+          <option value="12-year">12 year</option>
+          <option value="15-year">15 year</option>
+        </select>
+      </div>
+
+      <div class="control-wrapper" id="button-wrapper">
+        <button id="button-control">Control Button</button>
+      </div>
+
+    </div>
+
+    <div class="console-pane">
+      <div id="console-output"></div>
+      <button id="clear-console-button">Clear</button>
+      
+      <label for="value-method-select">Value output mode</label>
+      <select id="value-method-select">
+        <option selected>normal</option>
+        <option>valueArray</option>
+        <option>valueArrayOne</option>
+        <option>idArray</option>
+        <option>idArrayOne</option>
+        <option>idValuePair</option>
+        <option>valueString</option>
+      </select>      
+    </div>
+
+    
+
+  </div>
+
+  <script src="controls.js"></script>
+  <script>
+    (function(){
+
+      var gebi = function( id ) {
+        return document.getElementById( id );
+      }
+
+      var Log = {};
+      Log.el = document.querySelector( "#console-output" );
+      Log.erase = function() {
+        this.el.innerHTML = "";
+        return this;
+      };
+      Log.print = function( string ) {
+        string = "<pre>" + string + "</pre>";
+        this.el.innerHTML += string;
+        this.el.scrollTop = this.el.scrollHeight;
+        return this;
+      };
+      var clearButton = document.querySelector( "#clear-console-button" );
+      clearButton.addEventListener( "click", function( event ) {
+        Log.erase();
+      });
+
+      var setValidClass = function( id, val ) {
+        gebi( id ).classList.toggle( "valid", val );
+      };
+
+      window.checkControls = Controls( "#checkbox-wrapper" );
+      window.radioControls = Controls( "#radio-wrapper" );
+      window.textControls = Controls( "#text-fields-wrapper" );      
+      window.buttonControls = Controls( "#button-wrapper" );
+      window.singleSelectControl = Controls( "#single-select-wrapper" );
+
+      var ctlCols = [
+        { elId: "checkbox-wrapper", col: checkControls },
+        { elId: "radio-wrapper", col: radioControls },
+        { elId: "text-fields-wrapper", col: textControls },
+        { elId: "single-select-wrapper", col: singleSelectControl },
+        { elId: "button-wrapper", col: buttonControls }
+      ];
+
+      window.masterCollection = Controls( ctlCols.map(function( c ){ return c.col }) );
+
+      var methodSelect = gebi( "value-method-select" );
+      ctlCols.forEach(function( c ) {
+        c.col.on( "valid", function() {
+          setValidClass( c.elId, true );
+        });
+        c.col.on( "invalid", function() {
+          setValidClass( c.elId, false )
+        });
+        setTimeout( function() {
+          c.col.on( "change", function() {
+            method = methodSelect.value;
+            var str = JSON.stringify( this.value()[ methodSelect.value ]() );
+            Log.print( str );
+          });
+        }, 0)
+      });
+
+
+    }).call( this );
+
+
+  </script>
+
+</body>
+</html>

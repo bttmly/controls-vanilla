@@ -279,7 +279,11 @@ class window.ValueObject extends Array
     m = @idArray()
     if m.length > 1 then m else m[0]
 
-  at: ( i ) -> @[i].value
+  at: ( i ) -> 
+    if isNaN Number( i )
+      @idValuePair()[i]
+    else
+      @[i].value
 
   first: -> @at( 0 )
 

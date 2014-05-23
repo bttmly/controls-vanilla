@@ -43,32 +43,57 @@ _Argument will be coerced to boolean._
 
 
 ## ValueObject
-Figuring out how to structure the values returned from a collection is tricky, which is why ControlCollection.prototype.value returns instances of ValueObject. These have handy methods for transforming the value array, and you can add to these through the prototype, which is exposed as `Controls.valueInit.prototype`.
+ValueObjects represent property values of a collection. The .value(), .prop(), and .data() methods of ControlCollections return ValueObject instances when called with their "get" signatures.
 
 ### .normal()
+Returns an vanilla array with the following structure:
+```javascript
+[ { id: "element1Id", value: "element1Value" }
+  { id: "element2Id", value: "element2Value" } ]
+```
 
 ### .valueArray()
+Returns an array with the following structure:
+```javascript
+[ "element1Value", "element2Value" ]
+```
 
 ### .idArray()
+Returns an array with the following structure:
+```javascript
+[ "element1Id", "element2Id" ]
+```
 
 ### .idValuePair
+Returns an object with the following structure:
+```javascript
+{ element1Id: "element1Value",
+  element2Id: "element2Value" }
+```
 
 ### .valueString( delimiter )
-delimiter - *String*; defaults to `, `
+Returns a string with values separated by `delimiter` (defaults to ", "). Equivalent to `.valueArray().join( delimiter )`.
+```javascript
+"element1Value, element2Value"
+```
 
 ### .valueArrayOne()
+Like .valueArray() but will return just array[0] if the array's length is 1.
 
 ### .idArrayOne()
+Like .idArray() but will return just array[0] if the array's length is 1.
 
-### .at( index )
-index - *Number*
+### .at( accessor )
+.at() depends on whether you pass it a number of a string. If `isNaN( Number( accessor ) )` is true, `.at( accessor )` is equivalent to `.idValuePair()[ accessor ]`. Otherwise, it's equivalent to `.valueArray()[ accessor ]`. So pass a string to get the value of the element with the matching `id`, or pass a number to get an element's value by index in the collection.
 
 ### .first()
+=== `.at( 1 )`
 
 ### .last()
+=== `.at( this.length - 1 )
 
 ### .serialize()
-
+=== JSON.serialize( this )
 
 ## Control Validation
 Add these to controls with `data-control-validation` to activate them.

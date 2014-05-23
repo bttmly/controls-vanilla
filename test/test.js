@@ -61,7 +61,8 @@
     }), ".idValuePair() looks good");
     equal(values.valueString(), "check, text, option3", ".valueString() default looks good");
     equal(values.valueString("---"), "check---text---option3", "valueString() with custom delimiter looks good");
-    equal(values.at(1), "text", ".at() looks good");
+    equal(values.at(1), "text", ".at() looks good called with number");
+    equal(values.at("mixedText"), "text", ".at() looks good called with a string");
     equal(values.first(), "check", ".first() looks good");
     equal(values.last(), "option3", ".last() looks good");
     equal(JSON.stringify(values.valueArrayOne()), JSON.stringify(values.valueArray()), ".idArrayOne() with length > 1 looks good");
@@ -330,23 +331,9 @@
     equal(JSON.stringify(response), JSON.stringify(["mixedCheck", "mixedText", "mixedSelect"]), "Functions are invoked in the context of the control DOM element.");
     labels = qsa("label", "#mixed-controls");
     colLabels = mixedControls.labels();
-    equal(labels.length === colLabels.length && labels.every(function(label) {
+    return equal(labels.length === colLabels.length && labels.every(function(label) {
       return __indexOf.call(colLabels, label) >= 0;
     }), true, "Labels gets labels of collection's controls");
-    equal;
-    mixedControls = Controls("#mixed-controls");
-    return equal(JSON.stringify(mixedControls.mapIdToProp("type").normal()), JSON.stringify([
-      {
-        id: "mixedCheck",
-        type: "checkbox"
-      }, {
-        id: "mixedText",
-        type: "text"
-      }, {
-        id: "mixedSelect",
-        type: "select-one"
-      }
-    ]), ".mapIdToProp() looks good");
   });
 
   test("External", function() {

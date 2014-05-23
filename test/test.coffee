@@ -47,7 +47,8 @@ test "Value Object", ->
   equal values.valueString(), "check, text, option3", ".valueString() default looks good"
   equal values.valueString("---"), "check---text---option3", "valueString() with custom delimiter looks good"
 
-  equal values.at( 1 ), "text", ".at() looks good"
+  equal values.at( 1 ), "text", ".at() looks good called with number"
+  equal values.at( "mixedText" ), "text", ".at() looks good called with a string"
   equal values.first(), "check", ".first() looks good"
   equal values.last(), "option3", ".last() looks good"
 
@@ -315,18 +316,6 @@ test "Misc.", ->
   equal labels.length is colLabels.length and labels.every( ( label ) ->
     label in colLabels
   ), true, "Labels gets labels of collection's controls"
-
-  equal 
-
-
-  mixedControls = Controls( "#mixed-controls" )
-  equal JSON.stringify( mixedControls.mapIdToProp( "type" ).normal() ),
-    JSON.stringify( [
-      { id: "mixedCheck", type: "checkbox" },
-      { id: "mixedText", type: "text" },
-      { id: "mixedSelect", type: "select-one" }
-    ] ),
-    ".mapIdToProp() looks good"
 
 test "External", ->
 

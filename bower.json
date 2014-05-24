@@ -1,0 +1,28 @@
+{
+  "name": "Controls",
+  "main": "controls.js",
+  "version": "0.0.1",
+  "homepage": "https://github.com/nickb1080/controls",
+  "authors": [
+    "Nick Bottomley <nhbottomley@gmail.com>"
+  ],
+  "description": "Handle user controls gracefully.",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "controls",
+    "ui",
+    "controls",
+    "input"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/bower_components",
+    "test",
+    "tests"
+  ]
+}

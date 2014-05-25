@@ -177,7 +177,7 @@ elValue = ( el ) ->
   # get the first non-disabled selected option
   # no support for multi select currently
   else if el.matches( "select" )
-    if el.selectedOptions[0].disabled is false then el.selectedOptions[0].value else false
+    if not el.selectedOptions[0]?.disabled then el.selectedOptions[0]?.value else false
   # buttons don't have values
   else if el.matches( "button" ) or el.matches( "input[type='button']" )
     false

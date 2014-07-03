@@ -13,8 +13,8 @@ if Element and not Element::matches
 map = Function::call.bind( Array::map )
 each = Function::call.bind( Array::forEach )
 slice = Function::call.bind( Array::slice )
-every = Function::call.bind( Array::every )
 filter = Function::call.bind( Array::filter )
+every = Function::call.bind( Array::every )
 
 remove = ( arr, val ) ->
   i = arr.indexOf( val )
@@ -45,6 +45,8 @@ isFunction = ( obj ) ->
 controlValidations = do ->
 
   # nice short namespace by which validations refer to each other.
+  #
+  # fix this shit so element is always first argument rather than last
   v = 
     notEmpty: ( el ) -> !!el.value
 
@@ -228,24 +230,24 @@ elClear = ( el ) ->
 # Functions to generate and emit events we'll be using often.
 # If addding event id's, change to "new CustomEvent", and use details: {}
 # TODO: create general event producer to ensure all events bubble?
-event = ( type ) -> new Event type, bubbles: true
+makeEvent = ( type ) -> new Event type, bubbles: true
 
 trigger = ( target, type ) ->
-  evt = event( type )
+  evt = makeEvent( type )
   method = if "trigger" of target then "trigger" else "dispatchEvent"
   target[ method ]( evt )
 
-validEvent = -> event( "valid" )
+validEvent = -> makeEvent( "valid" )
 
-invalidEvent = -> event( "invalid" )
+invalidEvent = -> makeEvent( "invalid" )
 
-changeEvent = -> event( "change" )
+changeEvent = -> makeEvent( "change" )
   
 
 
 # Return value of ControlCollection::value() is an instance of this class
 # Has handy methods for transforming value into more palatable structure
-class window.ValueObject extends Array
+class ValueObject extends Array
   constructor: ( arr ) ->
     if Array.isArray( arr )
       [].push.apply( this, arr )
@@ -416,12 +418,12 @@ class ControlCollection extends Array
   # these do nothing if no param is passed.
   disabled: ( param ) ->
     return this unless param?
-    control.disabled = !!param for control in this
+    ( control.disabled = !!param ) for control in this
     this
 
   required: ( param ) ->
     return this unless param?
-    control.required = !!param for control in this
+    ( control.required = !!param ) for control in this
     this
 
   checked: ( param ) ->
@@ -522,7 +524,7 @@ Factory = do ->
       else if param instanceof Element 
         
         # checks if not a control element
-        # get descendant controls and pass them back into this function NodeList
+        # get descendant controls and pass them back into this function
         if param.tagName.toLowerCase() not in controlTags
           inner param.querySelectorAll controlTags.join ", "
           return
